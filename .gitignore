@@ -1,0 +1,7 @@
+game/src/libgcc_parts/*
+!game/src/libgcc_parts/fetch.sh
+game/build
+build
+tools
+game/main
+*.zip
