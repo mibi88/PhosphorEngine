@@ -104,10 +104,22 @@ function termPutC(term, char) {
 
     if(char == '\n'){
         newLine(term);
+    }else if(char.charCodeAt(0) == 0x7F){
+        /* Backspace: Moves the cursor back one char (the program handles
+         * erasing) */
+        term.x--;
+        if(term.x < 0){
+            term.x = 79;
+            if(term.y > 0) term.y--;
+            else term.x = 0;
+        }
     }else{
         var pre = document.getElementById("terminal-row-" + term.y);
-        pre.textContent = pre.textContent.substring(0, term.x) + char +
-                          pre.textContent.substring(term.x+1);
+        if(char.charCodeAt(0) != 0x11){
+            /* Using 0x12 (ASCII DC2) to advance without writing any text. */
+            pre.textContent = pre.textContent.substring(0, term.x) + char +
+                              pre.textContent.substring(term.x+1);
+        }
         term.x++;
     }
     if(term.x >= 80){

@@ -52,11 +52,24 @@ function loadBinary(url, onLoad, error) {
 }
 
 function start() {
+    keyqueue = []
+
+    // Add an event listener to handle keypresses
+    window.onkeydown = (event) => {
+        var id = event.key.charCodeAt(0);
+        console.log(event.key);
+        if(event.key == "Enter") id = 0x0A;
+        else if(event.key == "Backspace") id = 0x7F;
+        else if(id < 0x20 || id > 0x7F || event.key.length != 1) return;
+
+        keyqueue.push(id);
+    }
+
     loadBinary("main", (rom) => {
         const debug = 0;
         const rtDebug = 0;
         const runOnce = 0;
-        const stepInstrs = 200;
+        const stepInstrs = 2000;
 
         console.log(rom);
         const cpu = {};
@@ -68,7 +81,14 @@ function start() {
             if(addr < 1024*1024){
                 return ram[addr];
             }else if(addr < 1024*1024+16){
-                /* I/O registers */
+                if(addr == 1024*1024+1){
+                    /* stdin */
+                    if(keyqueue.length > 0){
+                        id = keyqueue.shift();
+                        console.log("in", id);
+                        return id&0xFF;
+                    }
+                }
                 return 0; /* TODO */
             }
             return rom[(addr-(1024*1024+16))%(1024*1024)];

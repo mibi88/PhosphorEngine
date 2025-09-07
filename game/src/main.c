@@ -69,6 +69,35 @@ void puts(char *str) {
     }
 }
 
+void gets(char *str, size_t max) {
+    volatile char *in = (void*)(1024*1024+1);
+    volatile char *out = (void*)(1024*1024);
+    size_t i = 0;
+
+    while(1){
+        char c;
+
+        while(!(c = *in));
+
+        if(c == '\n'){
+            str[i] = 0;
+            *out = '\n';
+            return;
+        }else if(c == 0x7F){
+            if(i){
+                *out = 0x7F;
+                *out = ' ';
+                *out = 0x7F;
+                i--;
+            }
+        }else if(i < max-1){
+            str[i++] = c;
+            *out = c;
+        }
+    }
+    str[i] = 0;
+}
+
 void itoa(int i, char *buffer, size_t size) {
     char *max = buffer+size;
     char *start;
@@ -114,6 +143,11 @@ int main(void) {
     for(i=0x20;i<0x7F;i++){
         *out = i;
     }
+    puts("\n> ");
+    gets(buffer, 20);
+    puts("You entered \"");
+    puts(buffer);
+    puts("\"\n");
 
     while(1);
     return 0;
