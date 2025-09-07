@@ -36,7 +36,6 @@ function termInit(term, div) {
     term.div = div;
     term.x = 0;
     term.y = 0;
-    term.timestamp = null;
     for(var i=0;i<24;i++){
         var pre = document.createElement("pre");
         pre.id = "terminal-row-" + i;
@@ -124,17 +123,13 @@ function termUpdate(term, timestamp) {
     const fgColor = "#FFBF00";
     const bgColor = "black";
 
-    if(term.timestamp != null){
-        var s = ((timestamp-term.timestamp)/delta)&1;
-        var cur = document.getElementById("terminal-cursor");
-        if(s){
-            cur.style.backgroundColor = fgColor;
-            cur.style.color = bgColor;
-        }else{
-            cur.style.backgroundColor = bgColor;
-            cur.style.color = fgColor;
-        }
+    var s = (timestamp/delta)&1;
+    var cur = document.getElementById("terminal-cursor");
+    if(s){
+        cur.style.backgroundColor = fgColor;
+        cur.style.color = bgColor;
     }else{
-        term.timestamp = timestamp;
+        cur.style.backgroundColor = bgColor;
+        cur.style.color = fgColor;
     }
 }
