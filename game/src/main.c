@@ -73,6 +73,11 @@ void itoa(int i, char *buffer, size_t size) {
     char *max = buffer+size;
     char *start;
     int n = i;
+    if(i == 0){
+        buffer[0] = '0';
+        buffer[1] = 0;
+        return;
+    }
     if(i < 0){
         i = -i;
         if(buffer+2 < max){
@@ -101,7 +106,6 @@ int main(void) {
     char buffer[20];
     size_t i;
     volatile char *out = (void*)(1024*1024);
-    puts(a);
     for(i=0;i<80;i++){
         itoa(i, buffer, 20);
         puts(buffer);

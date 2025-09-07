@@ -36,6 +36,7 @@ function termInit(term, div) {
     term.div = div;
     term.x = 0;
     term.y = 0;
+    term.timestamp = null;
     for(var i=0;i<24;i++){
         var pre = document.createElement("pre");
         pre.id = "terminal-row-" + i;
@@ -51,14 +52,46 @@ function termScroll(term) {
     for(i=1;i<24;i++){
         pre1 = document.getElementById("terminal-row-" + i);
         var pre2 = document.getElementById("terminal-row-" + (i-1));
-        pre2.innerText = pre1.innerText
+        pre2.textContent = pre1.textContent
     }
-    pre1.innerText = " ".repeat(80);
+    pre1.textContent = " ".repeat(80);
 
     term.y--;
 }
 
 function termPutC(term, char) {
+    const curStart = "<span id=\"terminal-cursor\">";
+    const curEnd = "</span>";
+
+    const removeCur = (term) => {
+        var pre = document.getElementById("terminal-row-" + term.y);
+        try{
+            pre.removeChild(document.getElementById("terminal-cursor"));
+        }catch(e){
+            console.log("Failed to remove cursor");
+        }
+    }
+
+    const escape = (str) => {
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    const addCur = (term) => {
+        var pre = document.getElementById("terminal-row-" + term.y);
+        var before = escape(pre.textContent.substring(0, term.x));
+        var after = escape(pre.textContent.substring(term.x+1));
+        var char = escape(pre.textContent.charAt(term.x));
+
+        pre.innerHTML = before + curStart + char + curEnd +
+                        after;
+    }
+
+    removeCur(term);
+
     const down = (term) => {
         term.y++;
         if(term.y >= 24){
@@ -73,17 +106,35 @@ function termPutC(term, char) {
     if(char == '\n'){
         newLine(term);
     }else{
-        var idx = term.x;
         var pre = document.getElementById("terminal-row-" + term.y);
-        pre.innerText = pre.innerText.substring(0, idx) + char +
-                        pre.innerText.substring(idx+1);
+        pre.textContent = pre.textContent.substring(0, term.x) + char +
+                          pre.textContent.substring(term.x+1);
         term.x++;
     }
     if(term.x >= 80){
         newLine(term);
     }
+
+    addCur(term);
 }
 
 function termUpdate(term, timestamp) {
     /* Let the cursor blink. */
+    const delta = 600;
+    const fgColor = "#FFBF00";
+    const bgColor = "black";
+
+    if(term.timestamp != null){
+        var s = ((timestamp-term.timestamp)/delta)&1;
+        var cur = document.getElementById("terminal-cursor");
+        if(s){
+            cur.style.backgroundColor = fgColor;
+            cur.style.color = bgColor;
+        }else{
+            cur.style.backgroundColor = bgColor;
+            cur.style.color = fgColor;
+        }
+    }else{
+        term.timestamp = timestamp;
+    }
 }
