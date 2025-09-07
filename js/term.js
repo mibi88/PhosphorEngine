@@ -32,85 +32,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stddef.h>
-
-extern char _start_bss, _end_bss;
-extern char _start_data, _end_data;
-extern char _romdata_start;
-
-/* The main function. */
-extern int main(void);
-
-__attribute__((section(".pretext")))
-
-int _start(void) {
-#if 1
-    volatile char *bss_ptr, *data_ptr, *romdataptr;
-    /* Clearing the bss. */
-    bss_ptr = &_start_bss;
-    for(;bss_ptr<&_end_bss;bss_ptr++){
-        *bss_ptr = 0;
-    }
-    /* Load the ROM data into the RAM. */
-    data_ptr = &_start_data;
-    romdataptr = &_romdata_start;
-    for(;data_ptr<&_end_data;data_ptr++,romdataptr++){
-        *data_ptr++ = *romdataptr++;
-    }
-#endif
-    return main();
-}
-
-void puts(char *str) {
-    volatile char *out = (void*)(1024*1024);
-    while(*str){
-        *out = *str;
-        str++;
+function termInit(term, div) {
+    term.div = div;
+    term.x = 0;
+    term.y = 0;
+    for(var i=0;i<24;i++){
+        var pre = document.createElement("pre");
+        pre.id = "terminal-row-" + i;
+        pre.style.margin = 0;
+        pre.innerHTML += " ".repeat(80);
+        term.div.appendChild(pre);
     }
 }
 
-void itoa(int i, char *buffer, size_t size) {
-    char *max = buffer+size;
-    char *start;
-    int n = i;
-    if(i < 0){
-        i = -i;
-        if(buffer+2 < max){
-            *buffer++ = '-';
+function termScroll(term) {
+    // TODO
+    var pre1;
+    for(i=1;i<24;i++){
+        pre1 = document.getElementById("terminal-row-" + i);
+        var pre2 = document.getElementById("terminal-row-" + (i-1));
+        pre2.innerText = pre1.innerText
+    }
+    pre1.innerText = " ".repeat(80);
+
+    term.y--;
+}
+
+function termPutC(term, char) {
+    const down = (term) => {
+        term.y++;
+        if(term.y >= 24){
+            termScroll(term);
         }
-    }
-    start = buffer;
-    while(n){
-        if(buffer+2 < max){
-            n /= 10;
-            buffer++;
-        }else{
-            break;
-        }
-    }
-    *buffer = 0;
+    };
+    const newLine = (term) => {
+        down(term);
+        term.x = 0;
+    };
 
-    while(buffer-- != start){
-        *buffer = '0'+(i%10);
-        i /= 10;
+    if(char == '\n'){
+        newLine(term);
+    }else{
+        var idx = term.x;
+        var pre = document.getElementById("terminal-row-" + term.y);
+        pre.innerText = pre.innerText.substring(0, idx) + char +
+                        pre.innerText.substring(idx+1);
+        term.x++;
+    }
+    if(term.x >= 80){
+        newLine(term);
     }
 }
 
-int main(void) {
-    char *a = ": Hello world!\n";
-    char buffer[20];
-    size_t i;
-    volatile char *out = (void*)(1024*1024);
-    puts(a);
-    for(i=0;i<80;i++){
-        itoa(i, buffer, 20);
-        puts(buffer);
-        puts(a);
-    }
-    for(i=0x20;i<0x7F;i++){
-        *out = i;
-    }
-
-    while(1);
-    return 0;
+function termUpdate(term, timestamp) {
+    /* Let the cursor blink. */
 }

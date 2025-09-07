@@ -53,13 +53,14 @@ function loadBinary(url, onLoad, error) {
 
 function start() {
     loadBinary("main", (rom) => {
-        const debug = 1;
-        const rtDebug = 1;
+        const debug = 0;
+        const rtDebug = 0;
         const runOnce = 0;
         const stepInstrs = 200;
 
         console.log(rom);
         const cpu = {};
+        const out = {};
 
         var ram = [];
 
@@ -80,7 +81,7 @@ function start() {
                 /* I/O registers */
                 if(addr == 1024*1024){
                     /* Console output register */
-                    output.innerText += String.fromCharCode(byte);
+                    termPutC(out, String.fromCharCode(byte));
                 }else if(addr == 1024*1024+1){
                     /* Console output register */
                     console.log(byte);
@@ -107,6 +108,7 @@ function start() {
         }
 
         RVInit(cpu, 1024*1024+16, r, w);
+        termInit(out, document.getElementById("terminal"));
 
         function run(timestamp) {
             for(i=0;i<stepInstrs || cpu.jam;i++){
@@ -116,6 +118,9 @@ function start() {
                 }
                 RVRunInstr(cpu);
             }
+
+            termUpdate(out, timestamp);
+
             if(cpu.jam) console.log("Jammed!");
             else if(!runOnce) requestAnimationFrame(run);
         }

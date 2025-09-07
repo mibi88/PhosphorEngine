@@ -115,11 +115,16 @@ done
 echo "-- Copying index.html..."
 cp index.html $builddir/index.html
 
+echo "-- Copying styles.css..."
+cp styles.css $builddir/styles.css
+
 echo "-- Copying the binary..."
 cp $bin $builddir/main
 
-echo "-- Copying favicon.ico..."
-cp favicon.ico $builddir
+for i in $(find assets -type f ! -name "favicon.png"); do
+    echo "-- Copying $i to $builddir..."
+    cp $i $builddir
+done
 
 echo "-- Creating the ZIP file..."
 rm $name
