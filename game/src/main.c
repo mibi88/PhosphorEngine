@@ -98,6 +98,16 @@ void gets(char *str, size_t max) {
     str[i] = 0;
 }
 
+void beep(unsigned char note, size_t duration) {
+    unsigned int *t = (void*)(1024*1024+4);
+    unsigned char *a = (void*)(1024*1024+8);
+    unsigned int time = *t;
+
+    *a = note;
+    while(*t-time < duration);
+    *a = 0x80;
+}
+
 void itoa(int i, char *buffer, size_t size) {
     char *max = buffer+size;
     char *start;
@@ -143,6 +153,7 @@ int main(void) {
     for(i=0x20;i<0x7F;i++){
         *out = i;
     }
+    beep(3|(9<<3), 1000); /* Play A-3 (220Hz) for 1 second */
     puts("\n> ");
     gets(buffer, 20);
     puts("You entered \"");

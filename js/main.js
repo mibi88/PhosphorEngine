@@ -71,23 +71,50 @@ function start() {
         const runOnce = 0;
         const stepInstrs = 2000;
 
+        const audioCtx = new AudioContext();
+        const oscillator = audioCtx.createOscillator();
+
+        oscillator.type = "square";
+        oscillator.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.frequency.setValueAtTime(0, audioCtx.currentTime);
+
         console.log(rom);
         const cpu = {};
         const out = {};
 
         var ram = [];
 
+        var time = Math.floor(Date.now());
+
         function r(rv, addr) {
             if(addr < 1024*1024){
                 return ram[addr];
             }else if(addr < 1024*1024+16){
-                if(addr == 1024*1024+1){
-                    /* stdin */
-                    if(keyqueue.length > 0){
-                        id = keyqueue.shift();
-                        console.log("in", id);
-                        return id&0xFF;
-                    }
+                switch(addr){
+                    case 1024*1024+1:
+                        /* stdin */
+                        if(keyqueue.length > 0){
+                            id = keyqueue.shift();
+                            console.log("in", id);
+                            return id&0xFF;
+                        }
+                        break;
+
+                    case 1024*1024+4:
+                        /* Lowest timestamp byte (also used to update the
+                         * timestamp) */
+                        time = Math.floor(Date.now());
+                        return time&0xFF;
+                    case 1024*1024+5:
+                        /* Timestamp byte 1 */
+                        return (time>>8)&0xFF;
+                    case 1024*1024+6:
+                        /* Timestamp byte 2 */
+                        return (time>>16)&0xFF;
+                    case 1024*1024+7:
+                        /* Timestamp byte 3 */
+                        return (time>>24)&0xFF;
                 }
                 return 0; /* TODO */
             }
@@ -99,12 +126,51 @@ function start() {
                 ram[addr] = byte;
             }else if(addr < 1024*1024+16){
                 /* I/O registers */
-                if(addr == 1024*1024){
-                    /* Console output register */
-                    termPutC(out, String.fromCharCode(byte));
-                }else if(addr == 1024*1024+1){
-                    /* Console output register */
-                    console.log(byte);
+                switch(addr){
+                    case 1024*1024:
+                        /* Console output register */
+                        termPutC(out, String.fromCharCode(byte));
+                        break;
+
+                    case 1024*1024+2:
+                        /* Cursor X */
+                        out.x = byte%80;
+                        break;
+
+                    case 1024*1024+3:
+                        /* Cursor Y */
+                        out.y = byte%24;
+                        break;
+
+                    case 1024*1024+8:
+                        /* Audio out */
+                        /* Semitones:
+                         *
+                         * 0:  C
+                         * 1:  C#
+                         * 2:  D
+                         * 3:  D#
+                         * 4:  E
+                         * 5:  F
+                         * 6:  F#
+                         * 7:  G
+                         * 8:  G#
+                         * 9:  A
+                         * 10: A#
+                         * 11: B
+                         */
+                        var octave = byte&7;
+                        var semitone = byte>>3;
+                        var ref_pitch = 440;
+                        var frequency = (16.35*(1<<octave))*2**(semitone/12);
+                        if(byte&0x80){
+                            /* Stop audio by setting the 7th bit */
+                            frequency = 0;
+                        }
+                        oscillator.frequency.setValueAtTime(frequency,
+                                                            audioCtx
+                                                            .currentTime);
+                        break;
                 }
             }
         }
