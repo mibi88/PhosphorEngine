@@ -5,6 +5,9 @@ Phosphor Engine is small engine to create text adventures. It is made up of a
 rv32i emulator (if it can be called an emulator, a conversion tool to generate
 the text adventure data and the engine code.
 
+I created it for the js13k game jam 2025 but I'm not sure if I'll be able to
+make a game with it before the deadline.
+
 The engine code is in the game folder.
 
     BUILDING
@@ -15,6 +18,17 @@ First of all, you need a llvm toolchain. It can be installed like this on
 Fedora:
 
 # dnf install llvm clang
+
+
+Here is a complete list of the dependencies:
+
+ - bash
+ - the GNU coreutils obviously
+ - java (not required when passing the -d flag)
+ - imagemagick (when passing the -i flag)
+ - clang/llvm
+
+If I forgot to list a dependency, please file an issue.
 
 Then, just run the build script:
 
