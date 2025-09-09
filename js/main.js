@@ -52,168 +52,208 @@ function loadBinary(url, onLoad, error) {
 }
 
 function start() {
-    keyqueue = []
+    var keyqueue = [];
+    const out = {};
 
-    // Add an event listener to handle keypresses
-    window.onkeydown = (event) => {
-        var id = event.key.charCodeAt(0);
-        console.log(event.key);
-        if(event.key == "Enter") id = 0x0A;
-        else if(event.key == "Backspace") id = 0x7F;
-        else if(id < 0x20 || id > 0x7F || event.key.length != 1) return;
+    termInit(out, document.getElementById("terminal"));
 
-        keyqueue.push(id);
+    const msg = "Press any key to start...";
+    for(var i=0;i<msg.length;i++){
+        termPutC(out, msg[i]);
     }
 
-    loadBinary("main", (rom) => {
-        const debug = 0;
-        const rtDebug = 0;
-        const runOnce = 0;
-        const stepInstrs = 2000;
+    window.onkeydown = (event) => {
+        loadBinary("main", (rom) => {
+            const debug = 0;
+            const rtDebug = 0;
+            const runOnce = 0;
+            const stepInstrs = 2000;
 
-        const audioCtx = new AudioContext();
-        const oscillator = audioCtx.createOscillator();
+            console.log(rom);
+            const cpu = {};
 
-        oscillator.type = "square";
-        oscillator.connect(audioCtx.destination);
-        oscillator.start();
-        oscillator.frequency.setValueAtTime(0, audioCtx.currentTime);
+            var ram = [];
 
-        console.log(rom);
-        const cpu = {};
-        const out = {};
+            var time = Math.floor(Date.now());
 
-        var ram = [];
+            var writeTmp;
 
-        var time = Math.floor(Date.now());
+            // Audio output
+            const audioCtx = new AudioContext();
+            const oscillator = audioCtx.createOscillator();
 
-        function r(rv, addr) {
-            if(addr < 1024*1024){
-                return ram[addr];
-            }else if(addr < 1024*1024+16){
-                switch(addr){
-                    case 1024*1024+1:
-                        /* stdin */
-                        if(keyqueue.length > 0){
-                            id = keyqueue.shift();
-                            console.log("in", id);
-                            return id&0xFF;
-                        }
-                        break;
+            oscillator.type = "square";
+            oscillator.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.frequency.setValueAtTime(0, audioCtx.currentTime);
 
-                    case 1024*1024+4:
-                        /* Lowest timestamp byte (also used to update the
-                         * timestamp) */
-                        time = Math.floor(Date.now());
-                        return time&0xFF;
-                    case 1024*1024+5:
-                        /* Timestamp byte 1 */
-                        return (time>>8)&0xFF;
-                    case 1024*1024+6:
-                        /* Timestamp byte 2 */
-                        return (time>>16)&0xFF;
-                    case 1024*1024+7:
-                        /* Timestamp byte 3 */
-                        return (time>>24)&0xFF;
+            // Add an event listener to handle keypresses
+            window.onkeydown = (event) => {
+                var id = event.key.charCodeAt(0);
+                if(event.key == "Enter") id = 0x0A;
+                else if(event.key == "Backspace") id = 0x7F;
+                else if(id < 0x20 || id > 0x7F || event.key.length != 1) return;
+
+                if(keyqueue.length >= 255){
+                    /* Keep the queue from filling up too much. */
+                    keyqueue.shift();
                 }
-                return 0; /* TODO */
+                keyqueue.push(id);
             }
-            return rom[(addr-(1024*1024+16))%(1024*1024)];
-        }
 
-        function w(rv, addr, byte) {
-            if(addr < 1024*1024){
-                ram[addr] = byte;
-            }else if(addr < 1024*1024+16){
-                /* I/O registers */
-                switch(addr){
-                    case 1024*1024:
-                        /* Console output register */
-                        termPutC(out, String.fromCharCode(byte));
-                        break;
+            function r(rv, addr) {
+                if(addr < 1024*1024){
+                    return ram[addr];
+                }else if(addr < 1024*1024+16){
+                    switch(addr){
+                        case 1024*1024+1:
+                            /* stdin */
+                            if(keyqueue.length > 0){
+                                id = keyqueue.shift();
+                                console.log("in", id);
+                                return id&0xFF;
+                            }
+                            break;
 
-                    case 1024*1024+2:
-                        /* Cursor X */
-                        out.x = byte%80;
-                        break;
+                        case 1024*1024+8:
+                            /* Cursor X */
+                            return out.x;
 
-                    case 1024*1024+3:
-                        /* Cursor Y */
-                        out.y = byte%24;
-                        break;
+                        case 1024*1024+9:
+                            /* Cursor X high byte */
+                            return out.x>>8;
 
-                    case 1024*1024+8:
-                        /* Audio out */
-                        /* Semitones:
-                         *
-                         * 0:  C
-                         * 1:  C#
-                         * 2:  D
-                         * 3:  D#
-                         * 4:  E
-                         * 5:  F
-                         * 6:  F#
-                         * 7:  G
-                         * 8:  G#
-                         * 9:  A
-                         * 10: A#
-                         * 11: B
-                         */
-                        var octave = byte&7;
-                        var semitone = byte>>3;
-                        var ref_pitch = 440;
-                        var frequency = (16.35*(1<<octave))*2**(semitone/12);
-                        if(byte&0x80){
-                            /* Stop audio by setting the 7th bit */
-                            frequency = 0;
-                        }
-                        oscillator.frequency.setValueAtTime(frequency,
-                                                            audioCtx
-                                                            .currentTime);
-                        break;
+                        case 1024*1024+10:
+                            /* Cursor Y */
+                            return out.y;
+
+                        case 1024*1024+11:
+                            /* Cursor Y high byte */
+                            return out.y>>8;
+
+                        case 1024*1024+4:
+                            /* Lowest timestamp byte (also used to update the
+                             * timestamp) */
+                            time = Math.floor(Date.now());
+                            return time&0xFF;
+                        case 1024*1024+5:
+                            /* Timestamp byte 1 */
+                            return (time>>8)&0xFF;
+                        case 1024*1024+6:
+                            /* Timestamp byte 2 */
+                            return (time>>16)&0xFF;
+                        case 1024*1024+7:
+                            /* Timestamp byte 3 */
+                            return (time>>24)&0xFF;
+                    }
+                    return 0; /* TODO */
+                }
+                return rom[(addr-(1024*1024+16))%(1024*1024)];
+            }
+
+            function w(rv, addr, byte) {
+                if(addr < 1024*1024){
+                    ram[addr] = byte;
+                }else if(addr < 1024*1024+16){
+                    /* I/O registers */
+                    switch(addr){
+                        case 1024*1024:
+                            /* Console output register */
+                            termPutC(out, String.fromCharCode(byte));
+                            break;
+
+                        case 1024*1024+8:
+                            /* Cursor X low byte */
+                            writeTmp = byte;
+                            break;
+
+                        case 1024*1024+9:
+                            /* Cursor X high byte */
+                            termSetX(out, writeTmp|(byte<<8));
+                            break;
+
+                        case 1024*1024+10:
+                            /* Cursor Y */
+                            writeTmp = byte;
+                            break;
+
+                        case 1024*1024+11:
+                            /* Cursor Y high byte */
+                            termSetY(out, writeTmp|(byte<<8));
+                            break;
+
+                        case 1024*1024+2:
+                            /* Audio out */
+                            /* Semitones:
+                             *
+                             * 0:  C
+                             * 1:  C#
+                             * 2:  D
+                             * 3:  D#
+                             * 4:  E
+                             * 5:  F
+                             * 6:  F#
+                             * 7:  G
+                             * 8:  G#
+                             * 9:  A
+                             * 10: A#
+                             * 11: B
+                             */
+                            var octave = byte&7;
+                            var semitone = byte>>3;
+                            var ref_pitch = 440;
+                            var frequency = (16.35*(1<<octave))*2**(semitone/12);
+                            if(byte&0x80){
+                                /* Stop audio by setting the 7th bit */
+                                frequency = 0;
+                            }
+                            oscillator.frequency.setValueAtTime(frequency,
+                                                                audioCtx
+                                                                .currentTime);
+                            break;
+                    }
                 }
             }
-        }
 
-        if(debug){
-            console.log("--- Disassembly start ---");
+            if(debug){
+                console.log("--- Disassembly start ---");
+
+                RVInit(cpu, 1024*1024+16, r, w);
+
+                while(cpu.pc <= 1024*1024+16+rom.length+4){
+                    try{
+                        RVLoadInstr(cpu);
+                        console.log((cpu.pc-4).toString(16) + ": " +
+                                    RVDisAs(cpu, 0));
+                    }catch(e){
+                        console.log((cpu.pc-4).toString(16) + ": <unknown>");
+                    }
+                }
+
+                console.log("--- Disassembly end   ---")
+            }
 
             RVInit(cpu, 1024*1024+16, r, w);
 
-            while(cpu.pc <= 1024*1024+16+rom.length+4){
-                try{
+            function run(timestamp) {
+                for(i=0;i<stepInstrs || cpu.jam;i++){
                     RVLoadInstr(cpu);
-                    console.log((cpu.pc-4).toString(16) + ": " +
-                                RVDisAs(cpu, 0));
-                }catch(e){
-                    console.log((cpu.pc-4).toString(16) + ": <unknown>");
+                    if(rtDebug){
+                        console.log(RVGetEmuState(cpu, false));
+                    }
+                    RVRunInstr(cpu);
                 }
+
+                termUpdate(out, timestamp);
+
+                if(cpu.jam) console.log("Jammed!");
+                else if(!runOnce) requestAnimationFrame(run);
             }
-
-            console.log("--- Disassembly end   ---")
-        }
-
-        RVInit(cpu, 1024*1024+16, r, w);
-        termInit(out, document.getElementById("terminal"));
-
-        function run(timestamp) {
-            for(i=0;i<stepInstrs || cpu.jam;i++){
-                RVLoadInstr(cpu);
-                if(rtDebug){
-                    console.log(RVGetEmuState(cpu, false));
-                }
-                RVRunInstr(cpu);
-            }
-
-            termUpdate(out, timestamp);
-
-            if(cpu.jam) console.log("Jammed!");
-            else if(!runOnce) requestAnimationFrame(run);
-        }
-        requestAnimationFrame(run);
-    }, () => {
-        alert("Failed to load code");
-    });
+            requestAnimationFrame(run);
+        }, () => {
+            alert("Failed to load code");
+        });
+    }
 }
 
 start();

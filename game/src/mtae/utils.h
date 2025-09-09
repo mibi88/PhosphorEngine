@@ -32,54 +32,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef MTAE_UTILS_H
+#define MTAE_UTILS_H
+
 #include <stddef.h>
-#include <mtae/utils.h>
 
-int main(void) {
-    char *a = ": Hello world!\n";
-    char buffer[20];
-    size_t i;
-    volatile char *out = (void*)(1024*1024);
+void puts(char *str);
+void gets(char *str, size_t max);
+void beep(unsigned char note, size_t duration);
 
-    unsigned short int x, y;
-    unsigned short int w, h;
+void set_cur_x(unsigned short int x);
+void set_cur_y(unsigned short int y);
+unsigned short int get_cur_x(void);
+unsigned short int get_cur_y(void);
 
-    for(i=0;i<80;i++){
-        itoa(i, buffer, 20);
-        puts(buffer);
-        puts(a);
-    }
-    for(i=0x20;i<0x7F;i++){
-        *out = i;
-    }
-    beep(3|(9<<3), 1000); /* Play A-3 (220Hz) for 1 second */
-    puts("\n> ");
-    gets(buffer, 20);
-    puts("You entered \"");
-    puts(buffer);
-    puts("\"\n");
+void itoa(int i, char *buffer, size_t size);
 
-    /* Move to the bottom-right corner */
-    x = get_cur_x();
-    y = get_cur_y();
-
-    set_cur_x(0xFFFF);
-    set_cur_y(0xFFFF);
-
-    w = get_cur_x()+1;
-    h = get_cur_y()+1;
-
-    set_cur_x(x);
-    set_cur_y(y);
-
-    puts("Terminal size: ");
-    itoa(w, buffer, 20);
-    puts(buffer);
-    puts("x");
-    itoa(h, buffer, 20);
-    puts(buffer);
-    puts("\n");
-
-    while(1);
-    return 0;
-}
+#endif

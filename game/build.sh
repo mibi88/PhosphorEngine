@@ -44,7 +44,7 @@ cc=clang
 ld=ld.lld
 
 cflags=(-ansi -ffreestanding --target=riscv32 -march=rv32i -Wall -Wextra \
-        -Wpedantic)
+        -Wpedantic -Isrc)
 ldflags=(-T mtae.x)
 
 builddir=build

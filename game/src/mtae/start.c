@@ -33,53 +33,30 @@
  */
 
 #include <stddef.h>
-#include <mtae/utils.h>
 
-int main(void) {
-    char *a = ": Hello world!\n";
-    char buffer[20];
-    size_t i;
-    volatile char *out = (void*)(1024*1024);
+extern char _start_bss, _end_bss;
+extern char _start_data, _end_data;
+extern char _romdata_start;
 
-    unsigned short int x, y;
-    unsigned short int w, h;
+/* The main function. */
+extern int main(void);
 
-    for(i=0;i<80;i++){
-        itoa(i, buffer, 20);
-        puts(buffer);
-        puts(a);
+__attribute__((section(".pretext")))
+
+int _start(void) {
+#if 1
+    volatile char *bss_ptr, *data_ptr, *romdataptr;
+    /* Clearing the bss. */
+    bss_ptr = &_start_bss;
+    for(;bss_ptr<&_end_bss;bss_ptr++){
+        *bss_ptr = 0;
     }
-    for(i=0x20;i<0x7F;i++){
-        *out = i;
+    /* Load the ROM data into the RAM. */
+    data_ptr = &_start_data;
+    romdataptr = &_romdata_start;
+    for(;data_ptr<&_end_data;data_ptr++,romdataptr++){
+        *data_ptr++ = *romdataptr++;
     }
-    beep(3|(9<<3), 1000); /* Play A-3 (220Hz) for 1 second */
-    puts("\n> ");
-    gets(buffer, 20);
-    puts("You entered \"");
-    puts(buffer);
-    puts("\"\n");
-
-    /* Move to the bottom-right corner */
-    x = get_cur_x();
-    y = get_cur_y();
-
-    set_cur_x(0xFFFF);
-    set_cur_y(0xFFFF);
-
-    w = get_cur_x()+1;
-    h = get_cur_y()+1;
-
-    set_cur_x(x);
-    set_cur_y(y);
-
-    puts("Terminal size: ");
-    itoa(w, buffer, 20);
-    puts(buffer);
-    puts("x");
-    itoa(h, buffer, 20);
-    puts(buffer);
-    puts("\n");
-
-    while(1);
-    return 0;
+#endif
+    return main();
 }

@@ -46,7 +46,6 @@ function termInit(term, div) {
 }
 
 function termScroll(term) {
-    // TODO
     var pre1;
     for(i=1;i<24;i++){
         pre1 = document.getElementById("terminal-row-" + i);
@@ -58,19 +57,16 @@ function termScroll(term) {
     term.y--;
 }
 
-function termPutC(term, char) {
-    const curStart = "<span id=\"terminal-cursor\">";
-    const curEnd = "</span>";
-
-    const removeCur = (term) => {
-        var pre = document.getElementById("terminal-row-" + term.y);
-        try{
-            pre.removeChild(document.getElementById("terminal-cursor"));
-        }catch(e){
-            console.log("Failed to remove cursor");
-        }
+function __termRemoveCur(term) {
+    var pre = document.getElementById("terminal-row-" + term.y);
+    try{
+        pre.removeChild(document.getElementById("terminal-cursor"));
+    }catch(e){
+        console.log("Failed to remove cursor");
     }
+}
 
+function __termAddCur(term) {
     const escape = (str) => {
         return str.replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
@@ -79,17 +75,38 @@ function termPutC(term, char) {
                   .replace(/'/g, "&#039;");
     }
 
-    const addCur = (term) => {
-        var pre = document.getElementById("terminal-row-" + term.y);
-        var before = escape(pre.textContent.substring(0, term.x));
-        var after = escape(pre.textContent.substring(term.x+1));
-        var char = escape(pre.textContent.charAt(term.x));
+    const curStart = "<span id=\"terminal-cursor\">";
+    const curEnd = "</span>";
 
-        pre.innerHTML = before + curStart + char + curEnd +
-                        after;
-    }
+    var pre = document.getElementById("terminal-row-" + term.y);
+    var before = escape(pre.textContent.substring(0, term.x));
+    var after = escape(pre.textContent.substring(term.x+1));
+    var char = escape(pre.textContent.charAt(term.x));
 
-    removeCur(term);
+    pre.innerHTML = before + curStart + char + curEnd +
+                    after;
+}
+
+function termSetX(term, x) {
+    if(x < 0) x = 0;
+    else if(x >= 79) x = 79;
+
+    __termRemoveCur(term);
+    term.x = x;
+    __termAddCur(term);
+}
+
+function termSetY(term, y) {
+    if(y < 0) y = 0;
+    else if(y >= 23) y = 23;
+
+    __termRemoveCur(term);
+    term.y = y;
+    __termAddCur(term);
+}
+
+function termPutC(term, char) {
+    __termRemoveCur(term);
 
     const down = (term) => {
         term.y++;
@@ -126,7 +143,7 @@ function termPutC(term, char) {
         newLine(term);
     }
 
-    addCur(term);
+    __termAddCur(term);
 }
 
 function termUpdate(term, timestamp) {
