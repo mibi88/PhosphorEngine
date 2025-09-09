@@ -60,7 +60,11 @@ function termScroll(term) {
 function __termRemoveCur(term) {
     var pre = document.getElementById("terminal-row-" + term.y);
     try{
-        pre.removeChild(document.getElementById("terminal-cursor"));
+        var char = document.getElementById("terminal-cursor").textContent;
+        var before = pre.textContent.substring(0, term.x);
+        var after = pre.textContent.substring(term.x+1);
+
+        pre.textContent = before + char + after;
     }catch(e){
         console.log("Failed to remove cursor");
     }
