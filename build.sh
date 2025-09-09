@@ -47,7 +47,8 @@ help="USAGE: $0 [-d] [-f]\n"\
 "A small tool to compile Phosphor Engine games.\n\n"\
 "Options:\n"\
 "-d  Debug build (JS files aren't minified with closure)\n"\
-"-f  Force downloads"
+"-f  Force downloads\n"\
+"-i  Use the image loader, which loads the code from an image"
 
 name=phosphor.zip
 
@@ -59,10 +60,13 @@ tooldir=tools
 debug=false
 force=false
 
-while getopts "dfh" flag; do
+imageloader=false
+
+while getopts "dfih" flag; do
     case "${flag}" in
         d) debug=true ;;
         f) force=true ;;
+        i) imageloader=true ;;
         h) echo -e $help
            exit 0 ;;
     esac
@@ -78,7 +82,7 @@ closure=$tooldir/closure.jar
 if [ $force = true ] || [ ! -f $closure ]; then
     echo "-- Downloading closure..."
     #curl $closure_url > $closure
-    rm $closure
+    rm -f $closure
     wget $closure_url -O $closure
 fi
 
@@ -100,18 +104,28 @@ fi
 
 # Create the ZIP
 
-for i in $(find $srcdir -type f); do
-    out=$builddir/$i
+compile() {
+    out=$builddir/$2
     if [ $debug = true ]; then
-        echo "-- Copying $i to $out..."
+        echo "-- Copying $1 to $out..."
         mkdir -p $(dirname $out)
-        cp $i $out
+        cp $1 $out
     else
-        echo "-- Compiling $i to $out..."
+        echo "-- Compiling $1 to $out..."
         mkdir -p $(dirname $out)
-        java -jar $closure --js $i --js_output_file $out
+        java -jar $closure --js $1 --js_output_file $out
     fi
+}
+
+for i in $(find $srcdir -type f ! -name "loader_*.js"); do
+    compile $i $i
 done
+
+if [ $imageloader = true ]; then
+    compile "js/loader_img.js" "js/loader.js"
+else
+    compile "js/loader_bin.js" "js/loader.js"
+fi
 
 echo "-- Copying index.html..."
 cp index.html $builddir/index.html
@@ -120,7 +134,13 @@ echo "-- Copying styles.css..."
 cp styles.css $builddir/styles.css
 
 echo "-- Copying the binary..."
-cp $bin $builddir/main
+if [ $imageloader = true ]; then
+    rm -f $builddir/main
+    cp $bin.png $builddir/main.png
+else
+    rm -f $builddir/main.png
+    cp $bin $builddir/main
+fi
 
 for i in $(find assets -type f ! -name "favicon.png"); do
     echo "-- Copying $i to $builddir..."
@@ -128,8 +148,12 @@ for i in $(find assets -type f ! -name "favicon.png"); do
 done
 
 echo "-- Creating the ZIP file..."
-rm $name
-zip -9r $name $builddir
+rm -f $name
+
+currentdir=$(pwd)
+cd $builddir
+zip -9r $currentdir/$name .
+cd $currentdir
 
 echo "-- Exiting $rootdir..."
 cd $orgdir

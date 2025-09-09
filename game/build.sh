@@ -107,6 +107,17 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+echo "-- Generating $name.png..."
+
+magick -size $(cat $name | wc -c)x1 -depth 8 gray:$name $name.png
+
+if [ $? -ne 0 ]; then
+    echo "-- Build failed with exit code $?!"
+    echo "-- Exiting $rootdir..."
+    cd $orgdir
+    exit $?
+fi
+
 echo "-- Exiting $rootdir..."
 cd $orgdir
 echo "-- Build succeeded!"

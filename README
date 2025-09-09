@@ -25,6 +25,8 @@ and it should download all the necessary files and make a build of the game.
 You can pass the -d flag to make a debug build and the -f flag to force
 redownloading all the dependencies.
 
+You can pass the -i flag to store the game binary in an image.
+
     RUNNING IT
 
 To test it you can just run

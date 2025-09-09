@@ -33,25 +33,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-debug = 0;
-
-output = document.getElementById("output");
-
-function loadBinary(url, onLoad, error) {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = () => {
-        if(xmlhttp.status == 200 && xmlhttp.readyState == 4){
-            var data = Array.from(new Uint8Array(xmlhttp.response));
-            onLoad(data);
-        }else if(xmlhttp.readyState == 4){
-            error();
-        }
-    };
-    xmlhttp.open("GET", url, true);
-    xmlhttp.send();
-    xmlhttp.responseType = "arraybuffer";
-}
-
 function start() {
     var keyqueue = [];
     const out = {};
@@ -64,7 +45,7 @@ function start() {
     }
 
     window.onkeydown = (event) => {
-        loadBinary("main", (rom) => {
+        load((rom) => {
             const debug = 0;
             const rtDebug = 0;
             const runOnce = 0;
