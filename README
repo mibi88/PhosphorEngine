@@ -1,9 +1,9 @@
-                        MIBI'S TEXT ADVENTURE ENGINE
+                             PHOSPHOR ENGINE
                                 by Mibi88
 
-Mibi's Text Adventure Engine (MTAE) is small engine to create text adventures.
-It is made up of a rv32i emulator (if it can be called an emulator, a
-conversion tool to generate the text adventure data and the engine code.
+Phosphor Engine is small engine to create text adventures. It is made up of a
+rv32i emulator (if it can be called an emulator, a conversion tool to generate
+the text adventure data and the engine code.
 
 The engine code is in the game folder.
 

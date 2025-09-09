@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# A small RV32I emulator written in JS.
+# Phosphor Engine: A small but quite special game engine to create text
+#                  adventures.
 #
 # by Mibi88
 #
@@ -43,12 +44,12 @@ closure_url="https://repo1.maven.org/maven2/com/google/javascript/"\
 "closure-compiler/v20250820/closure-compiler-v20250820.jar"
 
 help="USAGE: $0 [-d] [-f]\n"\
-"A small tool to compile MTAE (Mibi's Text Adventure Engine) games.\n\n"\
+"A small tool to compile Phosphor Engine games.\n\n"\
 "Options:\n"\
 "-d  Debug build (JS files aren't minified with closure)\n"\
 "-f  Force downloads"
 
-name=mtae.zip
+name=phosphor.zip
 
 bin=game/main
 srcdir=js

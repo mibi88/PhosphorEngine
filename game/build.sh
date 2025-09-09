@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# A small RV32I emulator written in JS.
+# Phosphor Engine: A small but quite special game engine to create text
+#                  adventures.
 #
 # by Mibi88
 #
@@ -35,7 +36,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 help="USAGE: $0 [-d]\n"\
-"A small tool to compile the MTAE (Mibi's Text Adventure Engine) game "\
+"A small tool to compile the Phosphor Engine game "\
 "binary.\n\n"\
 "Options:\n"\
 "-d  Debug build (-O0 and no LTO)"
@@ -45,7 +46,7 @@ ld=ld.lld
 
 cflags=(-ansi -ffreestanding --target=riscv32 -march=rv32i -Wall -Wextra \
         -Wpedantic -Isrc)
-ldflags=(-T mtae.x)
+ldflags=(-T phosphor.x)
 
 builddir=build
 

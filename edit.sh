@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# A small RV32I emulator written in JS.
+# Phosphor Engine: A small but quite special game engine to create text
+#                  adventures.
 #
 # by Mibi88
 #
@@ -34,5 +35,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-nano $(find -type f ! -name "*.dbg" ! -path "./.git/*" ! -path "./build/*" \
-       -exec grep -Iq . {} \; -print | sort)
+nano $(find -type f ! -path "./.git/*" ! -path "./build/*" \
+            ! -path "./game/build/*" ! -path "./game/src/libgcc_parts/*" \
+            -exec grep -Iq . {} \; -print | sort)

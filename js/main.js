@@ -1,4 +1,5 @@
-/* A small RV32I emulator written in JS.
+/* Phosphor Engine: A small but quite special game engine to create text
+ *                  adventures.
  * by Mibi88
  *
  * This software is licensed under the BSD-3-Clause license:
