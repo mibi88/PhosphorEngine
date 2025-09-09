@@ -55,7 +55,7 @@ function start() {
     var keyqueue = [];
     const out = {};
 
-    termInit(out, document.getElementById("terminal"));
+    termInit(out, document.getElementById("terminal"), 80, 24);
 
     const msg = "Press any key to start...";
     for(var i=0;i<msg.length;i++){
@@ -64,7 +64,7 @@ function start() {
 
     window.onkeydown = (event) => {
         loadBinary("main", (rom) => {
-            const debug = 0;
+            const debug = 1;
             const rtDebug = 0;
             const runOnce = 0;
             const stepInstrs = 2000;
@@ -92,7 +92,8 @@ function start() {
                 var id = event.key.charCodeAt(0);
                 if(event.key == "Enter") id = 0x0A;
                 else if(event.key == "Backspace") id = 0x7F;
-                else if(id < 0x20 || id > 0x7F || event.key.length != 1) return;
+                else if(id < 0x20 || id > 0xFF ||
+                        event.key.length != 1) return;
 
                 if(keyqueue.length >= 255){
                     /* Keep the queue from filling up too much. */
@@ -110,7 +111,7 @@ function start() {
                             /* stdin */
                             if(keyqueue.length > 0){
                                 id = keyqueue.shift();
-                                console.log("in", id);
+                                if(debug) console.log("in", id);
                                 return id&0xFF;
                             }
                             break;

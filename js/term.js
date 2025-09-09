@@ -32,27 +32,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-function termInit(term, div) {
+function termInit(term, div, w, h) {
     term.div = div;
+
     term.x = 0;
     term.y = 0;
-    for(var i=0;i<24;i++){
+
+    term.w = w;
+    term.h = h;
+
+    for(var i=0;i<term.h;i++){
         var pre = document.createElement("pre");
         pre.id = "terminal-row-" + i;
         pre.style.margin = 0;
-        pre.innerHTML += " ".repeat(80);
+        pre.innerHTML += " ".repeat(term.w);
         term.div.appendChild(pre);
     }
 }
 
 function termScroll(term) {
     var pre1;
-    for(i=1;i<24;i++){
+    for(i=1;i<term.h;i++){
         pre1 = document.getElementById("terminal-row-" + i);
         var pre2 = document.getElementById("terminal-row-" + (i-1));
         pre2.textContent = pre1.textContent
     }
-    pre1.textContent = " ".repeat(80);
+    pre1.textContent = " ".repeat(term.w);
 
     term.y--;
 }
@@ -93,7 +98,7 @@ function __termAddCur(term) {
 
 function termSetX(term, x) {
     if(x < 0) x = 0;
-    else if(x >= 79) x = 79;
+    else if(x >= term.w-1) x = term.w-1;
 
     __termRemoveCur(term);
     term.x = x;
@@ -102,7 +107,7 @@ function termSetX(term, x) {
 
 function termSetY(term, y) {
     if(y < 0) y = 0;
-    else if(y >= 23) y = 23;
+    else if(y >= term.h-1) y = term.h-1;
 
     __termRemoveCur(term);
     term.y = y;
@@ -114,7 +119,7 @@ function termPutC(term, char) {
 
     const down = (term) => {
         term.y++;
-        if(term.y >= 24){
+        if(term.y >= term.h){
             termScroll(term);
         }
     };
@@ -130,7 +135,7 @@ function termPutC(term, char) {
          * erasing) */
         term.x--;
         if(term.x < 0){
-            term.x = 79;
+            term.x = term.w-1;
             if(term.y > 0) term.y--;
             else term.x = 0;
         }
@@ -143,7 +148,7 @@ function termPutC(term, char) {
         }
         term.x++;
     }
-    if(term.x >= 80){
+    if(term.x >= term.w){
         newLine(term);
     }
 
