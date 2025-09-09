@@ -54,6 +54,9 @@ should be able to play the text adventure!
 
 [ ] Code the conversion tool
 [ ] Code the engine
+[ ] Use a full libgcc or compiler-rt build instead of this messy libgcc source
+    code downloading script, because I was unable to compile libgcc or
+    compiler-rt entirely for rv32i so far.
 
     LICENSE
 
