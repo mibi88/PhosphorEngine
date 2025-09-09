@@ -64,7 +64,7 @@ function start() {
 
     window.onkeydown = (event) => {
         loadBinary("main", (rom) => {
-            const debug = 1;
+            const debug = 0;
             const rtDebug = 0;
             const runOnce = 0;
             const stepInstrs = 2000;
