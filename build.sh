@@ -92,6 +92,16 @@ else
     game/src/libgcc_parts/fetch.sh
 fi
 
+# Compile the data generation tool
+
+echo "-- Compiling the datagen tool..."
+
+if [ $debug = true ]; then
+    datagen/build.sh -d
+else
+    datagen/build.sh
+fi
+
 # Compile the game
 
 echo "-- Compiling the game..."
@@ -145,6 +155,12 @@ fi
 for i in $(find assets -type f ! -name "favicon.png"); do
     echo "-- Copying $i to $builddir..."
     cp $i $builddir
+done
+
+for i in $(find texts -type f); do
+    echo "-- Converting text adventure data $i..."
+    # TODO
+    datagen/main $i
 done
 
 echo "-- Creating the ZIP file..."
