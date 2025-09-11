@@ -62,6 +62,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
     unsigned char command = 0;
 
     unsigned char has_space = 1;
+    unsigned char has_newline = 1;
 
     unsigned char escaped = 0;
 
@@ -71,6 +72,8 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
     char cmd[PH_CONV_CMD_MAX_TOKENS][PH_CONV_TOKEN_MAX+1];
     size_t token_len = 0;
     size_t command_tok = 0;
+
+    size_t newlines = 0;
 
     conv->line = 1;
     conv->error = PH_CONV_SUCCESS;
@@ -123,9 +126,17 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             continue;
         }
 
+        printf("%c\n", c);
+
         if(strchr(ifs, c) == NULL){
             if(line_start){
+                printf("%lu %u %u\n", newlines, command, line_start);
+                if(newlines <= 1 && !command && !has_newline){
+                    fputc(' ', conv->out);
+                }
                 line_start = 0;
+                newlines = 0;
+                has_newline = 0;
             }
             if(!command){
                 fputc(c, conv->out);
@@ -142,6 +153,12 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
             has_space = 0;
         }else{
+            if(c == '\n'){
+                conv->line++;
+                line_start = 1;
+                if(!command) newlines++;
+            }
+
             if(c == '#' && line_start && !escaped){
                 /* Command */
                 command = 1;
@@ -163,8 +180,13 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                 /* Add space to output */
 
                 fputc(' ', conv->out);
-            }
 
+            }else if(line_start && c == '\n'){
+                if(newlines > 1 && !has_newline){
+                    fputc('\n', conv->out);
+                    has_newline = 1;
+                }
+            }
             has_space = 1;
 
             token_len = 0;
@@ -177,10 +199,9 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                     printf("%s, ", cmd[i]);
                 }
                 puts("");
-            }
 
-            conv->line++;
-            line_start = 1;
+                command = 0;
+            }
         }
 
         escaped = 0;
