@@ -46,7 +46,7 @@ int ph_conv_init(PHConv *conv, FILE *out) {
     conv->labels = NULL;
     conv->data = NULL;
 
-    conv->keep_newlines = 0;
+    conv->verbatim = 0;
 
     if(ph_arena_init(&conv->names, 64)) return 1;
 
@@ -131,14 +131,14 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
         if(strchr(ifs, c) == NULL){
             if(line_start){
                 if(newlines <= 1 && !command && !has_newline &&
-                   !conv->keep_newlines){
+                   !conv->verbatim){
                     fputc(' ', conv->out);
                 }
                 line_start = 0;
                 newlines = 0;
                 has_newline = 0;
             }
-            if(!command){
+            if(!command || conv->verbatim){
                 fputc(c, conv->out);
             }
 
@@ -146,13 +146,14 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
             if(token_len < PH_CONV_TOKEN_MAX-1){
                 token[token_len++] = c;
-            }else if(command){
+            }else if(command && !conv->verbatim){
                 conv->error = PH_CONV_E_TOKEN_TOO_LONG;
                 break;
             }
 
             has_space = 0;
         }else{
+            if(conv->verbatim) fputc(c, conv->out);
             if(c == '\n'){
                 conv->line++;
                 line_start = 1;
@@ -172,17 +173,17 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                     memcpy(cmd[command_tok], token, token_len);
                     cmd[command_tok][token_len] = 0;
                     command_tok++;
-                }else{
+                }else if(!conv->verbatim){
                     conv->error = PH_CONV_E_CMD_TOO_LONG;
                     break;
                 }
-            }else if(!has_space && !line_start){
+            }else if(!has_space && !line_start && !conv->verbatim){
                 /* Add space to output */
 
                 fputc(' ', conv->out);
 
-            }else if((line_start && c == '\n' && newlines > 1 &&
-                      !has_newline) || (conv->keep_newlines && !command)){
+            }else if(line_start && c == '\n' && newlines > 1 &&
+                     !has_newline && !conv->verbatim){
                 fputc('\n', conv->out);
                 has_newline = 1;
             }
@@ -193,7 +194,11 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
         if(c == '\n'){
             if(command){
+                /* Run the command */
+
+                /* TODO: Restrict commands in verbatim mode */
                 size_t i;
+
                 for(i=0;i<command_tok;i++){
                     printf("%s, ", cmd[i]);
                 }

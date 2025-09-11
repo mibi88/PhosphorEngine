@@ -50,7 +50,7 @@ typedef struct {
     PHArena names;
     unsigned char *data;
 
-    unsigned char keep_newlines;
+    unsigned char verbatim;
 
     size_t line;
     int error;
