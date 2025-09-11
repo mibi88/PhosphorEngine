@@ -33,57 +33,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef PHOSPHOR_CONV_H
+#define PHOSPHOR_CONV_H
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <arena.h>
 
-#include <conv.h>
+typedef struct {
+    char *name;
+    size_t pos;
+} PHLabel;
 
-int main(int argc, char **argv) {
-    FILE *in;
+typedef struct {
     FILE *out;
+    PHLabel *labels;
+    PHArena names;
+    unsigned char *data;
 
-    PHConv conv;
+    size_t line;
+    int error;
+} PHConv;
 
-    /* TODO: Allow multiple input files for a single output file. */
+enum {
+    PH_CONV_SUCCESS,
 
-    if(argc < 3){
-        fprintf(stderr, "USAGE: %s [INPUT] [OUTPUT]\n"
-                        "Phosphore Engine data conversion tool\n", argv[0]);
+    PH_CONV_E_AMOUNT
+};
 
-        return EXIT_FAILURE;
-    }
+int ph_conv_init(PHConv *conv, FILE *out);
+int ph_conv_convert(PHConv *conv, FILE *in);
+char *ph_conv_get_error(PHConv *conv);
+void ph_conv_free(PHConv *conv);
 
-    in = fopen(argv[1], "rb");
-    if(in == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[1]);
-
-        return EXIT_FAILURE;
-    }
-
-    out = fopen(argv[2], "wb");
-    if(out == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
-        fclose(in);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_init(&conv, out)){
-        fprintf(stderr, "%s: Internal error!\n", argv[0]);
-        fclose(in);
-        fclose(out);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_convert(&conv, in)){
-        fprintf(stderr, "%s:%lu: %s", argv[1], conv.line,
-                ph_conv_get_error(&conv));
-    }
-
-    fclose(out);
-
-    ph_conv_free(&conv);
-
-    return EXIT_SUCCESS;
-}
+#endif

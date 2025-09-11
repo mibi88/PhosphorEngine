@@ -56,6 +56,7 @@ bin=game/main
 srcdir=js
 builddir=build
 tooldir=tools
+data=game/build/data.bin
 
 debug=false
 force=false
@@ -101,6 +102,14 @@ if [ $debug = true ]; then
 else
     datagen/build.sh
 fi
+
+# Generate the text adventure data
+
+for i in $(find texts -type f); do
+    echo "-- Converting text adventure data $i to $data..."
+    datagen/main $i $data
+    xxd -i $data > $data.c
+done
 
 # Compile the game
 
@@ -155,12 +164,6 @@ fi
 for i in $(find assets -type f ! -name "favicon.png"); do
     echo "-- Copying $i to $builddir..."
     cp $i $builddir
-done
-
-for i in $(find texts -type f); do
-    echo "-- Converting text adventure data $i..."
-    # TODO
-    datagen/main $i
 done
 
 echo "-- Creating the ZIP file..."

@@ -33,57 +33,76 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
+#include <arena.h>
+
 #include <stdlib.h>
 
-#include <conv.h>
+int ph_arena_init(PHArena *arena, size_t chunk_size) {
+    arena->chunk_size = chunk_size;
 
-int main(int argc, char **argv) {
-    FILE *in;
-    FILE *out;
+    arena->current_chunk_size = arena->chunk_size;
 
-    PHConv conv;
-
-    /* TODO: Allow multiple input files for a single output file. */
-
-    if(argc < 3){
-        fprintf(stderr, "USAGE: %s [INPUT] [OUTPUT]\n"
-                        "Phosphore Engine data conversion tool\n", argv[0]);
-
-        return EXIT_FAILURE;
+    arena->data = malloc(sizeof(void*));
+    if(arena->data == NULL){
+        return 1;
     }
 
-    in = fopen(argv[1], "rb");
-    if(in == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[1]);
-
-        return EXIT_FAILURE;
+    arena->data[0] = malloc(chunk_size);
+    if(arena->data[0] == NULL){
+        free(arena->data);
+        arena->data = NULL;
+        return 1;
     }
 
-    out = fopen(argv[2], "wb");
-    if(out == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
-        fclose(in);
+    arena->current_chunk = 0;
 
-        return EXIT_FAILURE;
+    arena->usage = 0;
+
+    return 0;
+}
+
+void *ph_arena_alloc(PHArena *arena, size_t size, size_t num) {
+    size_t start = arena->usage+(size-arena->usage%size);
+    size_t end = start+size*num;
+
+    if(arena->data == NULL) return NULL;
+
+    if(end > arena->current_chunk_size){
+        size_t new_chunk_size = size*num > arena->chunk_size ?
+                                size*num : arena->chunk_size;
+        void *new;
+
+        new = realloc(arena->data, (arena->current_chunk+2)*sizeof(void*));
+        if(new == NULL) return NULL;
+
+        arena->data = new;
+
+        arena->current_chunk++;
+
+        arena->data[arena->current_chunk] = malloc(new_chunk_size);
+        if(arena->data[arena->current_chunk] == NULL){
+            arena->current_chunk--;
+            return NULL;
+        }
+
+        /* We successfully allocated a new chunk */
+        arena->usage = 0;
+        arena->current_chunk_size = new_chunk_size;
+
+        /* Recalculate the sizes */
+        start = 0;
+        end = start+size*num;
     }
 
-    if(ph_conv_init(&conv, out)){
-        fprintf(stderr, "%s: Internal error!\n", argv[0]);
-        fclose(in);
-        fclose(out);
+    arena->usage = end;
 
-        return EXIT_FAILURE;
+    return (unsigned char*)arena->data[arena->current_chunk]+start;
+}
+void ph_arena_free(PHArena *arena) {
+    size_t i;
+
+    for(i=0;i<=arena->current_chunk;i++){
+        free(arena->data[i]);
     }
-
-    if(ph_conv_convert(&conv, in)){
-        fprintf(stderr, "%s:%lu: %s", argv[1], conv.line,
-                ph_conv_get_error(&conv));
-    }
-
-    fclose(out);
-
-    ph_conv_free(&conv);
-
-    return EXIT_SUCCESS;
+    free(arena->data);
 }

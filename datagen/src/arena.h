@@ -33,57 +33,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef PHOSPHOR_ARENA
+#define PHOSPHOR_ARENA
 
-#include <conv.h>
+#include <stddef.h>
 
-int main(int argc, char **argv) {
-    FILE *in;
-    FILE *out;
+/* NOTE: It's a bit more than a simple arena, as the arena can allocate more
+ * space if needed. */
 
-    PHConv conv;
+typedef struct {
+    void **data;
+    size_t chunk_size;
+    size_t current_chunk_size;
+    size_t current_chunk;
+    size_t usage;
+} PHArena;
 
-    /* TODO: Allow multiple input files for a single output file. */
+int ph_arena_init(PHArena *arena, size_t chunk_size);
+void *ph_arena_alloc(PHArena *arena, size_t size, size_t num);
+void ph_arena_free(PHArena *arena);
 
-    if(argc < 3){
-        fprintf(stderr, "USAGE: %s [INPUT] [OUTPUT]\n"
-                        "Phosphore Engine data conversion tool\n", argv[0]);
-
-        return EXIT_FAILURE;
-    }
-
-    in = fopen(argv[1], "rb");
-    if(in == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[1]);
-
-        return EXIT_FAILURE;
-    }
-
-    out = fopen(argv[2], "wb");
-    if(out == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
-        fclose(in);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_init(&conv, out)){
-        fprintf(stderr, "%s: Internal error!\n", argv[0]);
-        fclose(in);
-        fclose(out);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_convert(&conv, in)){
-        fprintf(stderr, "%s:%lu: %s", argv[1], conv.line,
-                ph_conv_get_error(&conv));
-    }
-
-    fclose(out);
-
-    ph_conv_free(&conv);
-
-    return EXIT_SUCCESS;
-}
+#endif
