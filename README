@@ -24,6 +24,7 @@ Here is a complete list of the dependencies:
 
  - bash
  - the GNU coreutils obviously
+ - xxd
  - java (not required when passing the -d flag)
  - imagemagick (when passing the -i flag)
  - clang/llvm
