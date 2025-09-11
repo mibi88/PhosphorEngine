@@ -46,6 +46,8 @@ int ph_conv_init(PHConv *conv, FILE *out) {
     conv->labels = NULL;
     conv->data = NULL;
 
+    conv->keep_newlines = 0;
+
     if(ph_arena_init(&conv->names, 64)) return 1;
 
     return 0;
@@ -126,12 +128,10 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             continue;
         }
 
-        printf("%c\n", c);
-
         if(strchr(ifs, c) == NULL){
             if(line_start){
-                printf("%lu %u %u\n", newlines, command, line_start);
-                if(newlines <= 1 && !command && !has_newline){
+                if(newlines <= 1 && !command && !has_newline &&
+                   !conv->keep_newlines){
                     fputc(' ', conv->out);
                 }
                 line_start = 0;
@@ -181,11 +181,10 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
                 fputc(' ', conv->out);
 
-            }else if(line_start && c == '\n'){
-                if(newlines > 1 && !has_newline){
-                    fputc('\n', conv->out);
-                    has_newline = 1;
-                }
+            }else if((line_start && c == '\n' && newlines > 1 &&
+                      !has_newline) || (conv->keep_newlines && !command)){
+                fputc('\n', conv->out);
+                has_newline = 1;
             }
             has_space = 1;
 
@@ -201,6 +200,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                 puts("");
 
                 command = 0;
+                has_newline = 1;
             }
         }
 

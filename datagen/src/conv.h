@@ -50,6 +50,8 @@ typedef struct {
     PHArena names;
     unsigned char *data;
 
+    unsigned char keep_newlines;
+
     size_t line;
     int error;
 } PHConv;
