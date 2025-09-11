@@ -57,6 +57,10 @@ typedef struct {
 enum {
     PH_CONV_SUCCESS,
 
+    PH_CONV_E_UNSUPPORTED_CHAR,
+    PH_CONV_E_TOKEN_TOO_LONG,
+    PH_CONV_E_CMD_TOO_LONG,
+
     PH_CONV_E_AMOUNT
 };
 

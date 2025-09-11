@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     }
 
     if(ph_conv_convert(&conv, in)){
-        fprintf(stderr, "%s:%lu: %s", argv[1], conv.line,
+        fprintf(stderr, "%s:%lu: Error: %s\n", argv[1], conv.line,
                 ph_conv_get_error(&conv));
     }
 

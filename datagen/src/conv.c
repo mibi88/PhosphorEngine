@@ -36,6 +36,10 @@
 #include <conv.h>
 
 #include <stdlib.h>
+#include <string.h>
+
+#define PH_CONV_TOKEN_MAX 32
+#define PH_CONV_CMD_MAX_TOKENS 8
 
 int ph_conv_init(PHConv *conv, FILE *out) {
     conv->out = out;
@@ -54,6 +58,18 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
     unsigned char byte_count = 0;
     unsigned char required_byte_count = 1;
 
+    unsigned char line_start = 1;
+    unsigned char command = 0;
+
+    unsigned char has_space = 1;
+
+    char *ifs = " \t\n#";
+
+    char token[PH_CONV_TOKEN_MAX];
+    char cmd[PH_CONV_CMD_MAX_TOKENS][PH_CONV_TOKEN_MAX+1];
+    size_t token_len = 0;
+    size_t command_tok = 0;
+
     conv->line = 1;
     conv->error = PH_CONV_SUCCESS;
 
@@ -71,7 +87,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                 /* 4 byte UTF-8 char */
                 c = r&0x07;
                 required_byte_count = 4;
-            }else if((r&0xF0) == 0xF0){
+            }else if((r&0xF0) == 0xE0){
                 /* 3 byte UTF-8 char */
                 c = r&0x0F;
                 required_byte_count = 3;
@@ -92,9 +108,75 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
         if(byte_count != required_byte_count-1) continue;
 
+        if(!((c >= 0x20 && c <= 0x7E) || (c >= 0xA0 && c <= 0xFF) ||
+             c == '\r' || c == '\n' || c == '\t')){
+            conv->error = PH_CONV_E_UNSUPPORTED_CHAR;
+            break;
+        }
+
+        if(c == '\r') continue;
+
+        if(strchr(ifs, c) == NULL){
+            if(line_start){
+                line_start = 0;
+            }else if(!command){
+                fputc(c, conv->out);
+            }
+
+            /* Add char to token */
+
+            if(token_len < PH_CONV_TOKEN_MAX-1){
+                token[token_len++] = c;
+            }else if(command){
+                conv->error = PH_CONV_E_TOKEN_TOO_LONG;
+                break;
+            }
+
+            has_space = 0;
+        }else{
+            if(c == '#' && line_start){
+                /* Command */
+                command = 1;
+                command_tok = 0;
+            }
+
+            if(command && !has_space){
+                /* Token done */
+
+                if(command_tok < PH_CONV_CMD_MAX_TOKENS-1){
+                    memcpy(cmd[command_tok], token, token_len);
+                    cmd[command_tok][token_len] = 0;
+                    command_tok++;
+                }else{
+                    conv->error = PH_CONV_E_CMD_TOO_LONG;
+                    break;
+                }
+            }else if(!has_space && !line_start){
+                /* Add space to output */
+
+                fputc(' ', conv->out);
+            }
+
+            has_space = 1;
+
+            token_len = 0;
+        }
+
+        if(c == '\n'){
+            if(command){
+                size_t i;
+                for(i=0;i<command_tok;i++){
+                    printf("%s, ", cmd[i]);
+                }
+                puts("");
+            }
+
+            conv->line++;
+            line_start = 1;
+        }
+
         /* Parse the data itself. */
 
-        printf("%lu, ", c);
     }
 
     return conv->error;
@@ -102,7 +184,10 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
 char *ph_conv_get_error(PHConv *conv) {
     static char *errors[PH_CONV_E_AMOUNT] = {
-        "Success!"
+        "Success",
+        "Unsupported char",
+        "Command token too long",
+        "Command too long"
     };
 
     return errors[conv->error];

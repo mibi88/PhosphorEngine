@@ -1,3 +1,7 @@
 This is a small text adventure.
 
 ISO-8859 support test: ßàéç
+
+ # Some command
+# Some other command
+#Command
