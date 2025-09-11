@@ -63,6 +63,8 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
     unsigned char has_space = 1;
 
+    unsigned char escaped = 0;
+
     char *ifs = " \t\n#";
 
     char token[PH_CONV_TOKEN_MAX];
@@ -114,12 +116,18 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             break;
         }
 
-        if(c == '\r') continue;
+        if(c == '\\'){
+            escaped = 1;
+            continue;
+        }else if(c == '\r'){
+            continue;
+        }
 
         if(strchr(ifs, c) == NULL){
             if(line_start){
                 line_start = 0;
-            }else if(!command){
+            }
+            if(!command){
                 fputc(c, conv->out);
             }
 
@@ -134,7 +142,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
             has_space = 0;
         }else{
-            if(c == '#' && line_start){
+            if(c == '#' && line_start && !escaped){
                 /* Command */
                 command = 1;
                 command_tok = 0;
@@ -175,8 +183,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             line_start = 1;
         }
 
-        /* Parse the data itself. */
-
+        escaped = 0;
     }
 
     return conv->error;
