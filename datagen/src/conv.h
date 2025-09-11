@@ -46,9 +46,9 @@ typedef struct {
 
 typedef struct {
     /* TODO: Speed up searching with hashes. */
-    int (**command_fncs)(size_t argc, unsigned char **argv);
-    char **command_names;
-    size_t command_count;
+    int (**fncs)(void *_conv, size_t argc, char **argv);
+    char **names;
+    size_t count;
 } PHCommands;
 
 typedef struct {
@@ -72,6 +72,7 @@ enum {
     PH_CONV_E_UNSUPPORTED_CHAR,
     PH_CONV_E_TOKEN_TOO_LONG,
     PH_CONV_E_CMD_TOO_LONG,
+    PH_CONV_E_CMD_MISSING,
 
     PH_CONV_E_AMOUNT
 };

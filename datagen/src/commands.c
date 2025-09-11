@@ -33,24 +33,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PHOSPHOR_ARENA_H
-#define PHOSPHOR_ARENA_H
+#include <commands.h>
 
-#include <stddef.h>
+static int startverbatim(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
 
-/* NOTE: It's a bit more than a simple arena, as the arena can allocate more
- * space if needed. */
+    (void)argc;
+    (void)argv;
 
-typedef struct {
-    void **data;
-    size_t chunk_size;
-    size_t current_chunk_size;
-    size_t current_chunk;
-    size_t usage;
-} PHArena;
+    conv->verbatim = 1;
 
-int ph_arena_init(PHArena *arena, size_t chunk_size);
-void *ph_arena_alloc(PHArena *arena, size_t size, size_t num);
-void ph_arena_free(PHArena *arena);
+    return 0;
+}
 
-#endif
+static int endverbatim(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    (void)argc;
+    (void)argv;
+
+    conv->verbatim = 0;
+
+    return 0;
+}
+
+static int (*fncs[])(void *_conv, size_t argc, char **argv) = {
+    startverbatim,
+    endverbatim
+};
+
+static char *names[] = {
+    "startverbatim",
+    "endverbatim"
+};
+
+PHCommands ph_commands = {
+    fncs,
+    names,
+    2
+};

@@ -198,16 +198,23 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
         }
 
         if(c == '\n'){
-            if(command){
+            if(command && command_tok){
                 /* Run the command */
 
                 /* TODO: Restrict commands in verbatim mode */
                 size_t i;
 
-                for(i=0;i<command_tok;i++){
-                    printf("%s, ", cmd[i]);
+                for(i=0;i<conv->commands->count;i++){
+                    if(!strcmp((char*)conv->commands->names[i],
+                               (char*)cmd[i])){
+                        conv->commands->fncs[i](conv, command_tok,
+                                                (char**)cmd);
+                    }
                 }
-                puts("");
+                if(i == conv->commands->count){
+                    conv->error = PH_CONV_E_CMD_MISSING;
+                    break;
+                }
 
                 command = 0;
                 has_newline = 1;
@@ -225,7 +232,8 @@ char *ph_conv_get_error(PHConv *conv) {
         "Success",
         "Unsupported char",
         "Command token too long",
-        "Command too long"
+        "Command too long",
+        "Command not found"
     };
 
     return errors[conv->error];

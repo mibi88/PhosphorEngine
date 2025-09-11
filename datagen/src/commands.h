@@ -33,24 +33,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PHOSPHOR_ARENA_H
-#define PHOSPHOR_ARENA_H
+#ifndef PHOSPHOR_COMMANDS_H
+#define PHOSPHOR_COMMANDS_H
 
-#include <stddef.h>
+#include <conv.h>
 
-/* NOTE: It's a bit more than a simple arena, as the arena can allocate more
- * space if needed. */
-
-typedef struct {
-    void **data;
-    size_t chunk_size;
-    size_t current_chunk_size;
-    size_t current_chunk;
-    size_t usage;
-} PHArena;
-
-int ph_arena_init(PHArena *arena, size_t chunk_size);
-void *ph_arena_alloc(PHArena *arena, size_t size, size_t num);
-void ph_arena_free(PHArena *arena);
+extern PHCommands ph_commands;
 
 #endif
