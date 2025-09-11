@@ -45,6 +45,13 @@ typedef struct {
 } PHLabel;
 
 typedef struct {
+    /* TODO: Speed up searching with hashes. */
+    int (**command_fncs)(size_t argc, unsigned char **argv);
+    char **command_names;
+    size_t command_count;
+} PHCommands;
+
+typedef struct {
     FILE *out;
     PHLabel *labels;
     PHArena names;
@@ -54,6 +61,9 @@ typedef struct {
 
     size_t line;
     int error;
+
+    PHCommands *commands;
+    void *extra;
 } PHConv;
 
 enum {
@@ -66,7 +76,8 @@ enum {
     PH_CONV_E_AMOUNT
 };
 
-int ph_conv_init(PHConv *conv, FILE *out);
+int ph_conv_init(PHConv *conv, FILE *out, PHCommands *commands,
+                 void *extra);
 int ph_conv_convert(PHConv *conv, FILE *in);
 char *ph_conv_get_error(PHConv *conv);
 void ph_conv_free(PHConv *conv);

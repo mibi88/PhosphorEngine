@@ -41,12 +41,17 @@
 #define PH_CONV_TOKEN_MAX 32
 #define PH_CONV_CMD_MAX_TOKENS 8
 
-int ph_conv_init(PHConv *conv, FILE *out) {
+int ph_conv_init(PHConv *conv, FILE *out, PHCommands *commands,
+                 void *extra) {
     conv->out = out;
     conv->labels = NULL;
     conv->data = NULL;
 
     conv->verbatim = 0;
+
+    conv->commands = commands;
+
+    conv->extra = extra;
 
     if(ph_arena_init(&conv->names, 64)) return 1;
 

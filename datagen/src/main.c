@@ -41,6 +41,8 @@
 int main(int argc, char **argv) {
     FILE *in;
     FILE *out;
+    /* Define commands in a separate source file and export the struct. */
+    PHCommands commands;
 
     PHConv conv;
 
@@ -68,7 +70,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    if(ph_conv_init(&conv, out)){
+    if(ph_conv_init(&conv, out, &commands, NULL)){
         fprintf(stderr, "%s: Internal error!\n", argv[0]);
         fclose(in);
         fclose(out);
