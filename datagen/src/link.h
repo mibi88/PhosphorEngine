@@ -47,6 +47,11 @@ typedef struct {
 } PHLabel;
 
 typedef struct {
+    unsigned char id;
+    size_t str_id;
+} PHLabelCommand;
+
+typedef struct {
     PHLabel *labels;
     PHArena names;
     PHBuffer in_buffer;

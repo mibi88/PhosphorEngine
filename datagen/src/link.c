@@ -85,6 +85,14 @@ int ph_linker_link(PHLinker *linker, char *start) {
 
     size_t removed = 0;
 
+    /* TODO: Put this in a separate file and pass it as an argument for
+     * flexibility */
+    static PHLabelCommand commands[PH_LABELCMD_AMOUNT] = {
+        {PH_CMD_GOTO, 0},
+        {PH_CMD_CASE, 1},
+        {PH_CMD_DCASE, 1}
+    };
+
     /* Search all labels */
     for(i=0;i<linker->in_buffer.size;i++){
         unsigned char c = linker->in_buffer.data[i];
