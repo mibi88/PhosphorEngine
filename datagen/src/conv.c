@@ -38,8 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PH_CONV_TOKEN_MAX 32
-#define PH_CONV_CMD_MAX_TOKENS 8
+#include <format.h>
 
 int ph_conv_init(PHConv *conv, PHCommands *commands, void *extra) {
     conv->verbatim = 0;
@@ -248,7 +247,5 @@ char *ph_conv_get_error(PHConv *conv) {
 }
 
 void ph_conv_free(PHConv *conv) {
-    /* There is nothing to do here for now */
-
-    (void)conv;
+    ph_buffer_free(&conv->buffer);
 }

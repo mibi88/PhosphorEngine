@@ -54,7 +54,8 @@ enum {
 };
 
 int ph_buffer_init(PHBuffer *buffer, size_t step);
-int ph_buffer_write(PHBuffer *buffer, unsigned char *data, int size);
+int ph_buffer_alloc(PHBuffer *buffer, size_t size);
+int ph_buffer_write(PHBuffer *buffer, unsigned char *data, size_t size);
 int ph_buffer_putc(PHBuffer *buffer, unsigned char c);
 int ph_buffer_puts(PHBuffer *buffer, unsigned char *str);
 void ph_buffer_seek(PHBuffer *buffer, size_t pos, int whence);

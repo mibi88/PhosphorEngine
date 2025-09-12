@@ -52,7 +52,7 @@ int ph_buffer_init(PHBuffer *buffer, size_t step) {
     return 0;
 }
 
-int ph_buffer_write(PHBuffer *buffer, unsigned char *data, int size) {
+int ph_buffer_alloc(PHBuffer *buffer, size_t size) {
     if(buffer->cur+size > buffer->max){
         size_t new_size = buffer->max+((buffer->cur+size)/buffer->step+1)*
                           buffer->step;
@@ -64,6 +64,11 @@ int ph_buffer_write(PHBuffer *buffer, unsigned char *data, int size) {
         buffer->data = new;
         buffer->max = new_size;
     }
+    return 0;
+}
+
+int ph_buffer_write(PHBuffer *buffer, unsigned char *data, size_t size) {
+    if(ph_buffer_alloc(buffer, size)) return 1;
 
     memcpy(buffer->data+buffer->cur, data, size);
     buffer->size += size;

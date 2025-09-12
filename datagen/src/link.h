@@ -39,6 +39,8 @@
 #include <arena.h>
 #include <buffer.h>
 
+#include <stdio.h>
+
 typedef struct {
     char *name;
     size_t pos;
@@ -47,7 +49,25 @@ typedef struct {
 typedef struct {
     PHLabel *labels;
     PHArena names;
-    PHBuffer buffer;
-} PHDataLinker;
+    PHBuffer in_buffer;
+    PHBuffer out_buffer;
+    size_t label_count;
+    int error;
+} PHLinker;
+
+enum {
+    PH_LINK_SUCCESS,
+
+    PH_LINK_E_INTERNAL,
+    PH_LINK_E_UNKNOWN_LABEL,
+
+    PH_LINK_E_AMOUNT
+};
+
+int ph_linker_init(PHLinker *linker);
+int ph_linker_add_file(PHLinker *linker, FILE *in);
+int ph_linker_link(PHLinker *linker, char *start);
+char *ph_linker_get_error(PHLinker *linker);
+void ph_linker_free(PHLinker *linker);
 
 #endif

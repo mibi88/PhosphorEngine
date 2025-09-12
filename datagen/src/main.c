@@ -37,6 +37,7 @@
 #include <stdlib.h>
 
 #include <conv.h>
+#include <link.h>
 
 #include <commands.h>
 
@@ -45,6 +46,7 @@ int main(int argc, char **argv) {
     FILE *out;
 
     PHConv conv;
+    PHLinker linker;
 
     /* TODO: Allow multiple input files for a single output file. */
 
@@ -87,6 +89,49 @@ int main(int argc, char **argv) {
     fclose(out);
 
     ph_conv_free(&conv);
+
+    /* Link */
+
+    if(ph_linker_init(&linker)){
+        fprintf(stderr, "%s: Internal error!\n", argv[0]);
+
+        return EXIT_FAILURE;
+    }
+
+    in = fopen(argv[2], "rb");
+    if(in == NULL){
+        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
+        ph_linker_free(&linker);
+
+        return EXIT_FAILURE;
+    }
+
+    if(ph_linker_add_file(&linker, in)){
+        fprintf(stderr, "%s: Internal error!\n", argv[0]);
+        ph_linker_free(&linker);
+        fclose(in);
+
+        return EXIT_FAILURE;
+    }
+
+    fclose(in);
+
+    if(ph_linker_link(&linker, "main")){
+        fprintf(stderr, "%s: Error: %s\n", argv[0],
+                ph_linker_get_error(&linker));
+    }
+
+    out = fopen(argv[2], "wb");
+    if(out == NULL){
+        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
+        ph_linker_free(&linker);
+
+        return EXIT_FAILURE;
+    }
+
+    fwrite(linker.out_buffer.data, 1, linker.out_buffer.size, out);
+
+    ph_linker_free(&linker);
 
     return EXIT_SUCCESS;
 }
