@@ -38,11 +38,7 @@
 
 #include <stdio.h>
 #include <arena.h>
-
-typedef struct {
-    char *name;
-    size_t pos;
-} PHLabel;
+#include <buffer.h>
 
 typedef struct {
     /* TODO: Speed up searching with hashes. */
@@ -52,15 +48,14 @@ typedef struct {
 } PHCommands;
 
 typedef struct {
-    FILE *out;
-    PHLabel *labels;
-    PHArena names;
-    unsigned char *data;
-
     unsigned char verbatim;
+
+    size_t cmd_start;
 
     size_t line;
     int error;
+
+    PHBuffer buffer;
 
     PHCommands *commands;
     void *extra;
@@ -73,12 +68,14 @@ enum {
     PH_CONV_E_TOKEN_TOO_LONG,
     PH_CONV_E_CMD_TOO_LONG,
     PH_CONV_E_CMD_MISSING,
+    PH_CONV_E_TOO_FEW_ARGS,
+    PH_CONV_E_TOO_MANY_ARGS,
+    PH_CONV_E_INCORRECT_ARGS,
 
     PH_CONV_E_AMOUNT
 };
 
-int ph_conv_init(PHConv *conv, FILE *out, PHCommands *commands,
-                 void *extra);
+int ph_conv_init(PHConv *conv, PHCommands *commands, void *extra);
 int ph_conv_convert(PHConv *conv, FILE *in);
 char *ph_conv_get_error(PHConv *conv);
 void ph_conv_free(PHConv *conv);

@@ -37,6 +37,7 @@
 #define PHOSPHOR_COMMANDS_H
 
 #include <conv.h>
+#include <format.h>
 
 extern PHCommands ph_commands;
 

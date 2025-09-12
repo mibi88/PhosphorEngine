@@ -41,19 +41,14 @@
 #define PH_CONV_TOKEN_MAX 32
 #define PH_CONV_CMD_MAX_TOKENS 8
 
-int ph_conv_init(PHConv *conv, FILE *out, PHCommands *commands,
-                 void *extra) {
-    conv->out = out;
-    conv->labels = NULL;
-    conv->data = NULL;
-
+int ph_conv_init(PHConv *conv, PHCommands *commands, void *extra) {
     conv->verbatim = 0;
 
     conv->commands = commands;
 
     conv->extra = extra;
 
-    if(ph_arena_init(&conv->names, 64)) return 1;
+    if(ph_buffer_init(&conv->buffer, 64)) return 1;
 
     return 0;
 }
@@ -77,10 +72,18 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
     char token[PH_CONV_TOKEN_MAX];
     char cmd[PH_CONV_CMD_MAX_TOKENS][PH_CONV_TOKEN_MAX+1];
+    char *argv[PH_CONV_CMD_MAX_TOKENS];
     size_t token_len = 0;
     size_t command_tok = 0;
 
     size_t newlines = 0;
+
+    { /* TODO: Avoid having this messy array of pointers */
+        size_t i;
+        for(i=0;i<PH_CONV_CMD_MAX_TOKENS;i++){
+            argv[i] = cmd[i];
+        }
+    }
 
     conv->line = 1;
     conv->error = PH_CONV_SUCCESS;
@@ -137,14 +140,14 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             if(line_start){
                 if(newlines <= 1 && !command && !has_newline &&
                    !conv->verbatim){
-                    fputc(' ', conv->out);
+                    ph_buffer_putc(&conv->buffer, ' ');
                 }
                 line_start = 0;
                 newlines = 0;
                 has_newline = 0;
             }
             if(!command || conv->verbatim){
-                fputc(c, conv->out);
+                ph_buffer_putc(&conv->buffer, c);
             }
 
             /* Add char to token */
@@ -158,7 +161,6 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
             has_space = 0;
         }else{
-            if(conv->verbatim) fputc(c, conv->out);
             if(c == '\n'){
                 line_start = 1;
                 if(!command) newlines++;
@@ -168,7 +170,9 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                 /* Command */
                 command = 1;
                 command_tok = 0;
+                conv->cmd_start = conv->buffer.size;
             }
+            if(conv->verbatim) ph_buffer_putc(&conv->buffer, c);
 
             if(command && !has_space){
                 /* Token done */
@@ -184,11 +188,11 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             }else if(!has_space && !line_start && !conv->verbatim){
                 /* Add space to output */
 
-                fputc(' ', conv->out);
+                ph_buffer_putc(&conv->buffer, ' ');
 
             }else if(line_start && c == '\n' && newlines > 1 &&
                      !has_newline && !conv->verbatim){
-                fputc('\n', conv->out);
+                ph_buffer_putc(&conv->buffer, '\n');
                 has_newline = 1;
             }
             has_space = 1;
@@ -206,15 +210,15 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                 for(i=0;i<conv->commands->count;i++){
                     if(!strcmp((char*)conv->commands->names[i],
                                (char*)cmd[0])){
-                        conv->commands->fncs[i](conv, command_tok,
-                                                (char**)cmd);
                         break;
                     }
                 }
-                if(i == conv->commands->count){
+                if(i >= conv->commands->count){
                     conv->error = PH_CONV_E_CMD_MISSING;
                     break;
                 }
+                if((conv->error = conv->commands->fncs[i](conv, command_tok,
+                                                          argv))) break;
 
                 conv->line++;
                 command = 0;
@@ -234,14 +238,17 @@ char *ph_conv_get_error(PHConv *conv) {
         "Unsupported char",
         "Command token too long",
         "Command too long",
-        "Command not found"
+        "Command not found",
+        "Too few arguments",
+        "Too many arguments",
+        "Incorrect arguments"
     };
 
     return errors[conv->error];
 }
 
 void ph_conv_free(PHConv *conv) {
-    free(conv->labels);
-    conv->labels = NULL;
-    ph_arena_free(&conv->names);
+    /* There is nothing to do here for now */
+
+    (void)conv;
 }

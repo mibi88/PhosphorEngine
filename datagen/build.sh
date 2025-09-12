@@ -44,7 +44,7 @@ help="USAGE: $0 [-d]\n"\
 cc=clang
 ld=clang
 
-cflags=(-ansi -Wall -Wextra -Wpedantic -Isrc)
+cflags=(-ansi -Wall -Wextra -Wpedantic -Isrc -I../shared)
 ldflags=()
 
 builddir=build
@@ -64,7 +64,8 @@ done
 
 if [ $debug = true ]; then
     echo "-- Debug build..."
-    cflags+=(-O0)
+    cflags+=(-O0 -g)
+    ldflags+=(-g)
 else
     echo "-- Release build..."
     cflags+=(-Os)

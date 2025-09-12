@@ -33,60 +33,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef PHOSPHOR_BUFFER_H
+#define PHOSPHOR_BUFFER_H
 
-#include <conv.h>
+#include <stddef.h>
 
-#include <commands.h>
+typedef struct {
+    unsigned char *data;
+    size_t size;
+    size_t max;
+    size_t step;
+    size_t cur;
+} PHBuffer;
 
-int main(int argc, char **argv) {
-    FILE *in;
-    FILE *out;
+enum {
+    PH_BUFFER_START,
+    PH_BUFFER_END,
+    PH_BUFFER_CUR_INC,
+    PH_BUFFER_CUR_DEC
+};
 
-    PHConv conv;
+int ph_buffer_init(PHBuffer *buffer, size_t step);
+int ph_buffer_write(PHBuffer *buffer, unsigned char *data, int size);
+int ph_buffer_putc(PHBuffer *buffer, unsigned char c);
+int ph_buffer_puts(PHBuffer *buffer, unsigned char *str);
+void ph_buffer_seek(PHBuffer *buffer, size_t pos, int whence);
+void ph_buffer_truncate(PHBuffer *buffer, size_t max);
+void ph_buffer_free(PHBuffer *buffer);
 
-    /* TODO: Allow multiple input files for a single output file. */
-
-    if(argc < 3){
-        fprintf(stderr, "USAGE: %s [INPUT] [OUTPUT]\n"
-                        "Phosphore Engine data conversion tool\n", argv[0]);
-
-        return EXIT_FAILURE;
-    }
-
-    in = fopen(argv[1], "rb");
-    if(in == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[1]);
-
-        return EXIT_FAILURE;
-    }
-
-    out = fopen(argv[2], "wb");
-    if(out == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
-        fclose(in);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_init(&conv, &ph_commands, NULL)){
-        fprintf(stderr, "%s: Internal error!\n", argv[0]);
-        fclose(in);
-        fclose(out);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_convert(&conv, in)){
-        fprintf(stderr, "%s:%lu: Error: %s\n", argv[1], conv.line,
-                ph_conv_get_error(&conv));
-    }
-
-    fwrite(conv.buffer.data, 1, conv.buffer.size, out);
-    fclose(out);
-
-    ph_conv_free(&conv);
-
-    return EXIT_SUCCESS;
-}
+#endif

@@ -45,7 +45,7 @@ cc=clang
 ld=ld.lld
 
 cflags=(-ansi -ffreestanding --target=riscv32 -march=rv32i -Wall -Wextra \
-        -Wpedantic -Isrc)
+        -Wpedantic -Isrc -I../shared)
 ldflags=(-T phosphor.x)
 
 builddir=build

@@ -33,60 +33,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef PHOSPHOR_FORMAT_H
+#define PHOSPHOR_FORMAT_H
 
-#include <conv.h>
+#define PH_CMD_START 0x80
+#define PH_CMD_AMOUNT (PH_CMD_END-PH_CMD_START-1)
 
-#include <commands.h>
+enum {
+    PH_CMD_STARTVERBATIM = PH_CMD_START,
+    PH_CMD_ENDVERBATIM,
+    PH_CMD_CLEAR,
+    PH_CMD_HALIGN,
+    PH_CMD_VALIGN,
+    PH_CMD_SETX,
+    PH_CMD_SETY,
+    PH_CMD_PAGEBREAK,
+    PH_CMD_LABEL,
+    PH_CMD_GOTO,
+    PH_CMD_CASE,
+    PH_CMD_DCASE,
+    PH_CMD_CLEARCASES,
+    PH_CMD_ASK,
+    PH_CMD_ASKC,
+    PH_CMD_DELAY,
+    PH_CMD_NOTE,
+    PH_CMD_STARTBGM,
+    PH_CMD_ENDBGM,
 
-int main(int argc, char **argv) {
-    FILE *in;
-    FILE *out;
+    PH_CMD_EXTENDED,
 
-    PHConv conv;
+    PH_CMD_END
+};
 
-    /* TODO: Allow multiple input files for a single output file. */
+enum {
+    PH_CMD_ALIGN_LEFT   = 0,
+    PH_CMD_ALIGN_TOP    = 0,
+    PH_CMD_ALIGN_CENTER = 1,
+    PH_CMD_ALIGN_RIGHT  = 2,
+    PH_CMD_ALIGN_BOTTOM = 2
+};
 
-    if(argc < 3){
-        fprintf(stderr, "USAGE: %s [INPUT] [OUTPUT]\n"
-                        "Phosphore Engine data conversion tool\n", argv[0]);
-
-        return EXIT_FAILURE;
-    }
-
-    in = fopen(argv[1], "rb");
-    if(in == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[1]);
-
-        return EXIT_FAILURE;
-    }
-
-    out = fopen(argv[2], "wb");
-    if(out == NULL){
-        fprintf(stderr, "%s: Failed to open %s!\n", argv[0], argv[2]);
-        fclose(in);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_init(&conv, &ph_commands, NULL)){
-        fprintf(stderr, "%s: Internal error!\n", argv[0]);
-        fclose(in);
-        fclose(out);
-
-        return EXIT_FAILURE;
-    }
-
-    if(ph_conv_convert(&conv, in)){
-        fprintf(stderr, "%s:%lu: Error: %s\n", argv[1], conv.line,
-                ph_conv_get_error(&conv));
-    }
-
-    fwrite(conv.buffer.data, 1, conv.buffer.size, out);
-    fclose(out);
-
-    ph_conv_free(&conv);
-
-    return EXIT_SUCCESS;
-}
+#endif
