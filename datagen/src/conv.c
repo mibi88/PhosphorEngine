@@ -160,7 +160,6 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
         }else{
             if(conv->verbatim) fputc(c, conv->out);
             if(c == '\n'){
-                conv->line++;
                 line_start = 1;
                 if(!command) newlines++;
             }
@@ -206,9 +205,10 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
 
                 for(i=0;i<conv->commands->count;i++){
                     if(!strcmp((char*)conv->commands->names[i],
-                               (char*)cmd[i])){
+                               (char*)cmd[0])){
                         conv->commands->fncs[i](conv, command_tok,
                                                 (char**)cmd);
+                        break;
                     }
                 }
                 if(i == conv->commands->count){
@@ -216,6 +216,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
                     break;
                 }
 
+                conv->line++;
                 command = 0;
                 has_newline = 1;
             }

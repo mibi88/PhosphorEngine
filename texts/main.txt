@@ -1,14 +1,11 @@
+#startverbatim
 This is a small
   text adventure.
-
+#endverbatim
 
 
   ISO-8859 support test: ßàéç
 
 Another paragraph
-
- # Some command
-# Some other command
-#Command
 
 And some more text
