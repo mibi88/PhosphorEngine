@@ -107,6 +107,7 @@ fi
 
 for i in $(find texts -type f); do
     echo "-- Converting text adventure data $i to $data..."
+    # TODO: Improve this
     datagen/main $i $data
     xxd -i $data > $data.c
 done

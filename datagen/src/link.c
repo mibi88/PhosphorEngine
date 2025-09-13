@@ -84,7 +84,6 @@ int ph_linker_link(PHLinker *linker, char *start) {
     unsigned char in_label = 0;
 
     unsigned char in_cmd = 0;
-    size_t cmd_id = 0;
 
     size_t cmd_str = 0;
     size_t cmd_offset = 0;
@@ -141,6 +140,34 @@ int ph_linker_link(PHLinker *linker, char *start) {
         }
     }
 
+    /* Start the output file with a goto to the start label if needed */
+
+    {
+        size_t n;
+        for(n=0;n<linker->label_count;n++){
+            if(!strcmp(start, linker->labels[n].name)){
+                size_t label_pos;
+
+                /* Found the label */
+
+                label_pos = linker->labels[n].pos;
+
+                if(label_pos){
+                    ph_buffer_putc(&linker->out_buffer, PH_CMD_GOTO);
+
+                    ph_buffer_putc(&linker->out_buffer,
+                                   label_pos&0xFF);
+                    ph_buffer_putc(&linker->out_buffer,
+                                   (label_pos>>8)&0xFF);
+                    ph_buffer_putc(&linker->out_buffer,
+                                   (label_pos>>16)&0xFF);
+                    ph_buffer_putc(&linker->out_buffer,
+                                   (label_pos>>24)&0xFF);
+                }
+            }
+        }
+    }
+
     /* Replace labels with offsets */
     for(i=0;i<linker->in_buffer.size;i++){
         unsigned char c = linker->in_buffer.data[i];
@@ -158,7 +185,6 @@ int ph_linker_link(PHLinker *linker, char *start) {
                 for(n=0;n<PH_LABELCMD_AMOUNT;n++){
                     if(c == commands[n].id){
                         in_cmd = 1;
-                        cmd_id = commands[n].id;
                         cmd_str = commands[n].str_id;
                         cmd_offset = commands[n].offset;
 
@@ -183,7 +209,8 @@ int ph_linker_link(PHLinker *linker, char *start) {
                         /* Finished loading the label. */
 
                         for(n=0;n<linker->label_count;n++){
-                            if(!strcmp(label, linker->labels[n].name)){
+                            if(!strcmp((char*)label,
+                                       (char*)linker->labels[n].name)){
                                 unsigned long int offset;
                                 size_t label_pos;
 
