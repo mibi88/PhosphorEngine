@@ -145,9 +145,7 @@ void ph_adventure_run(PHAdventure *adv) {
                 break;
 
             case PH_CMD_PAGEBREAK:
-                /* TODO */
-                adv->cur++;
-                if(get_cur_x()){
+                if(get_cur_y()){
                     set_cur_x(0);
                     set_cur_y(h-1);
                     puts("Continue...");
@@ -159,6 +157,7 @@ void ph_adventure_run(PHAdventure *adv) {
                     set_cur_x(0);
                     set_cur_y(0);
                 }
+                adv->cur++;
                 break;
 
             case PH_CMD_LABEL:
@@ -300,6 +299,7 @@ void ph_adventure_run(PHAdventure *adv) {
                                     break;
                                 }
                             }
+                            if(!_VALID(_C)) break;
                             if(n < w) adv->cur++;
                             i=n;
                         }
@@ -323,7 +323,7 @@ void ph_adventure_run(PHAdventure *adv) {
                             adv->cur++;
                         }
                         putc('\n');
-                        if(get_cur_y() == h-1){
+                        if(get_cur_y() >= h-1){
                             set_cur_x(0);
                             puts("Continue...");
                             while(!(*in_reg));

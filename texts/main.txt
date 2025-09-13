@@ -6,19 +6,23 @@
 
 TODO
 
+#pagebreak
+
 #label main
 
 #clear
 
 #startverbatim
-   _____   _____    _____   _____   __   __   ______   __   ________ ___  ___
-  /     \ |  __  \ / ____\ /  ___\ |  | |  | |  __  \ |  | |        |\  \/  /
- |  ||   ||      < \___  \|  /     |  | |  | |      / |  | '--+  +--' \    /
- |  ||   ||  <>  \  ___|  |  \____ |   v   | |   \  \ |  |    |  |     |  | '
+   _____   ______   _____   _____   __   __   ______   __   ________ ___  ___
+  /  _  \ |  __  \ / ____\ /  ___\ |  | |  | |  __  \ |  | |        |\  \/  /
+ |  | |  ||      < \___  \|  /     |  | |  | |      / |  | '--+  +--' \    /
+ |  '_'  ||  <>  \  ___|  |  \____ |   v   | |   \  \ |  |    |  |     |  | '
   \_____/ |______/ /_____/ \_____/  \_____/  |__| \__\|__|    |__|     |__|  s
 
-                                    ~~ QUEST ~~
 #endverbatim
+#halign center
+~~ QUEST ~~
+#halign left
 
 #dcase start start
 #dcase help help
@@ -61,5 +65,16 @@ cursus rutrum augue. Nulla tincidunt tincidunt mi. Curabitur iaculis, lorem vel
 rhoncus faucibus, felis magna fermentum augue, et ultricies lacus lorem varius 
 purus. Curabitur eu amet.
 
-#label loop
-#goto loop
+#label end
+
+#pagebreak
+
+Thanks for playing!
+
+#halign right
+END
+#halign left
+
+#pagebreak
+
+#goto main
