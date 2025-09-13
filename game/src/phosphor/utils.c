@@ -49,6 +49,10 @@ void puts(char *str) {
     }
 }
 
+void putc(char c) {
+    *out_reg = c;
+}
+
 void gets(char *str, size_t max) {
     size_t i = 0;
 

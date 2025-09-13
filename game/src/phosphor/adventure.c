@@ -33,21 +33,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PHOSPHOR_UTILS_H
-#define PHOSPHOR_UTILS_H
+#include <phosphor/adventure.h>
+#include <phosphor/utils.h>
 
-#include <stddef.h>
+#include <format.h>
 
-void puts(char *str);
-void putc(char c);
-void gets(char *str, size_t max);
-void beep(unsigned char note, size_t duration);
+#define _C (adv->data[adv->cur])
 
-void set_cur_x(unsigned short int x);
-void set_cur_y(unsigned short int y);
-unsigned short int get_cur_x(void);
-unsigned short int get_cur_y(void);
+void ph_adventure_init(PHAdventure *adv, unsigned char *data) {
+    adv->case_count = 0;
+    adv->data = data;
+}
 
-void itoa(int i, char *buffer, size_t size);
+void ph_adventure_run(PHAdventure *adv) {
+    unsigned char in_command = 0;
+    unsigned char target;
 
-#endif
+    while(1){
+        switch(_C){
+            case PH_CMD_GOTO:
+                adv->cur++;
+                target = _C;
+                adv->cur++;
+                target |= _C<<8;
+                adv->cur++;
+                target |= _C<<16;
+                adv->cur++;
+                target |= _C<<24;
+                adv->cur = target-4;
+                break;
+            default:
+                putc(_C);
+                adv->cur++;
+        }
+    }
+}

@@ -33,21 +33,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PHOSPHOR_UTILS_H
-#define PHOSPHOR_UTILS_H
+#ifndef PHOSPHOR_ADVENTURE_H
+#define PHOSPHOR_ADVENTURE_H
 
 #include <stddef.h>
 
-void puts(char *str);
-void putc(char c);
-void gets(char *str, size_t max);
-void beep(unsigned char note, size_t duration);
+#define PH_ADV_CASE_MAX 8
+#define PH_ADV_CASE_LEN_MAX 32
 
-void set_cur_x(unsigned short int x);
-void set_cur_y(unsigned short int y);
-unsigned short int get_cur_x(void);
-unsigned short int get_cur_y(void);
+typedef struct {
+    struct{
+        char name[PH_ADV_CASE_LEN_MAX];
+        int offset;
+    } case_buffer[PH_ADV_CASE_MAX];
+    size_t case_count;
 
-void itoa(int i, char *buffer, size_t size);
+    unsigned char *data;
+
+    size_t cur;
+} PHAdventure;
+
+void ph_adventure_init(PHAdventure *adv, unsigned char *data);
+void ph_adventure_run(PHAdventure *adv);
 
 #endif

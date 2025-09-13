@@ -43,6 +43,7 @@ help="USAGE: $0 [-d]\n"\
 
 cc=clang
 ld=ld.lld
+objcopy=llvm-objcopy
 
 cflags=(-ansi -ffreestanding --target=riscv32 -march=rv32i -Wall -Wextra \
         -Wpedantic -Isrc -I../shared)
@@ -98,7 +99,8 @@ done
 
 # Linking
 echo "-- Linking $name..."
-$ld ${objfiles[@]} -o $name ${ldflags[@]}
+$ld ${objfiles[@]} -o $name.elf ${ldflags[@]}
+$objcopy -O binary $name.elf $name
 
 if [ $? -ne 0 ]; then
     echo "-- Build failed with exit code $?!"

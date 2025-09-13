@@ -35,8 +35,16 @@
 
 #include <stddef.h>
 #include <phosphor/utils.h>
+#include <phosphor/adventure.h>
+
+extern unsigned char ph_data[];
+extern unsigned int ph_data_len;
 
 int main(void) {
+    PHAdventure adv;
+
+#if 1
+
     char *a = ": Hello world!\n";
     char buffer[20];
     size_t i;
@@ -81,6 +89,20 @@ int main(void) {
     puts(buffer);
     puts("\n");
 
+    puts("ph_data_len: ");
+    itoa(ph_data_len, buffer, 20);
+    puts(buffer);
+    puts("\n");
+
+    for(i=0;i<ph_data_len;i++){
+        putc(ph_data[i]);
+    }
+
     while(1);
+
+#endif
+
+    ph_adventure_init(&adv, ph_data);
+    ph_adventure_run(&adv);
     return 0;
 }

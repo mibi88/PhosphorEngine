@@ -56,7 +56,7 @@ int _start(void) {
     data_ptr = &_start_data;
     romdataptr = &_romdata_start;
     for(;data_ptr<&_end_data;data_ptr++,romdataptr++){
-        *data_ptr++ = *romdataptr++;
+        *data_ptr = *romdataptr;
     }
 #endif
     return main();

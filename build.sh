@@ -56,7 +56,8 @@ bin=game/main
 srcdir=js
 builddir=build
 tooldir=tools
-data=game/build/data.bin
+data=game/src/data/data.bin
+dataname=ph_data
 
 debug=false
 force=false
@@ -105,11 +106,13 @@ fi
 
 # Generate the text adventure data
 
+mkdir -p $(dirname $data)
+
 for i in $(find texts -type f); do
     echo "-- Converting text adventure data $i to $data..."
     # TODO: Improve this
     datagen/main $i $data
-    xxd -i $data > $data.c
+    xxd  -n $dataname -i $data > $data.c
 done
 
 # Compile the game

@@ -1,9 +1,11 @@
 game/src/libgcc_parts/*
 !game/src/libgcc_parts/fetch.sh
+game/src/data/*
 game/build
 build
 tools
 game/main
+game/main.elf
 game/main.png
 datagen/build
 datagen/main
