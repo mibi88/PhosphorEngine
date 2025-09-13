@@ -49,6 +49,7 @@ typedef struct {
 typedef struct {
     unsigned char id;
     size_t str_id;
+    size_t offset;
 } PHLabelCommand;
 
 typedef struct {

@@ -83,14 +83,18 @@ int ph_linker_link(PHLinker *linker, char *start) {
     size_t label_cur = 0;
     unsigned char in_label = 0;
 
-    size_t removed = 0;
+    unsigned char in_cmd = 0;
+    size_t cmd_id = 0;
+
+    size_t cmd_str = 0;
+    size_t cmd_offset = 0;
 
     /* TODO: Put this in a separate file and pass it as an argument for
      * flexibility */
     static PHLabelCommand commands[PH_LABELCMD_AMOUNT] = {
-        {PH_CMD_GOTO, 0},
-        {PH_CMD_CASE, 1},
-        {PH_CMD_DCASE, 1}
+        {PH_CMD_GOTO, 0, 0},
+        {PH_CMD_CASE, 1, 0},
+        {PH_CMD_DCASE, 1, 0}
     };
 
     /* Search all labels */
@@ -138,11 +142,84 @@ int ph_linker_link(PHLinker *linker, char *start) {
     }
 
     /* Replace labels with offsets */
-    /* TODO */
-    for(i=0;i<linker->label_count;i++){
-        PHLabel *label = linker->labels+i;
+    for(i=0;i<linker->in_buffer.size;i++){
+        unsigned char c = linker->in_buffer.data[i];
 
-        printf("\"%s\": %lu\n", label->name, label->pos);
+        if(in_label){
+            if(c == 0){
+                in_label = 0;
+            }
+        }else if(c == PH_CMD_LABEL){
+            in_label = 1;
+        }else{
+            if(!in_cmd){
+                size_t n;
+
+                for(n=0;n<PH_LABELCMD_AMOUNT;n++){
+                    if(c == commands[n].id){
+                        in_cmd = 1;
+                        cmd_id = commands[n].id;
+                        cmd_str = commands[n].str_id;
+                        cmd_offset = commands[n].offset;
+
+                        label_cur = 0;
+
+                        break;
+                    }
+                }
+
+                if(!in_cmd){
+                    /* Output the char */
+
+                    ph_buffer_putc(&linker->out_buffer, c);
+                }
+            }else{
+                if(!cmd_str && !cmd_offset){
+                    if(c == 0){
+                        size_t n;
+
+                        label[label_cur] = 0;
+
+                        /* Finished loading the label. */
+
+                        for(n=0;n<linker->label_count;n++){
+                            if(!strcmp(label, linker->labels[n].name)){
+                                unsigned long int offset;
+                                size_t label_pos;
+
+                                /* Found the label */
+
+                                label_pos = linker->labels[n].pos;
+
+                                offset = ((label_pos-i)-
+                                          (i-linker->out_buffer.cur))&
+                                          0xFFFFFFFF;
+
+                                ph_buffer_putc(&linker->out_buffer,
+                                               offset&0xFF);
+                                ph_buffer_putc(&linker->out_buffer,
+                                               (offset>>8)&0xFF);
+                                ph_buffer_putc(&linker->out_buffer,
+                                               (offset>>16)&0xFF);
+                                ph_buffer_putc(&linker->out_buffer,
+                                               (offset>>24)&0xFF);
+                            }
+                        }
+
+                        in_cmd = 0;
+                    }else if(label_cur < PH_CONV_TOKEN_MAX-1){
+                        label[label_cur] = c;
+                        label_cur++;
+                    }
+                }else{
+                    /* Output the char */
+
+                    ph_buffer_putc(&linker->out_buffer, c);
+                }
+                if(cmd_offset) cmd_offset--;
+                else if(cmd_str && c == 0) cmd_str--;
+            }
+        }
     }
 
     return 0;
