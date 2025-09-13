@@ -95,6 +95,7 @@ void ph_adventure_run(PHAdventure *adv) {
                  * sign. */
                 adv->cur += target+(target&0x80000000 ? 1 : 0);
                 break;
+
             case PH_CMD_DCASE:
             case PH_CMD_CASE:
                 if(adv->case_count < PH_ADV_CASE_MAX){
@@ -129,6 +130,7 @@ void ph_adventure_run(PHAdventure *adv) {
                     adv->case_count++;
                 }
                 break;
+
             case PH_CMD_ASK:
             case PH_CMD_ASKC:
                 puts("\n> ");
@@ -151,10 +153,12 @@ void ph_adventure_run(PHAdventure *adv) {
                 }
                 if(c == PH_CMD_ASKC) adv->case_count = 0;
                 break;
+
             case PH_CMD_STARTVERBATIM:
                 puts("Verbatim start\n");
                 adv->cur++;
                 break;
+
             case PH_CMD_ENDVERBATIM:
                 puts("Verbatim end\n");
                 adv->cur++;
@@ -162,14 +166,16 @@ void ph_adventure_run(PHAdventure *adv) {
 
             default:
                 /* TODO: Add word wrap etc. */
-                before = get_cur_x();
-                putc(_C);
-                if(get_cur_x() < before || _C == '\n') lines++;
-                if(lines >= 23){
-                    puts("Continue...");
-                    while(!(*in_reg));
-                    lines = 0;
-                    putc('\n');
+                if(_C < PH_CMD_START || _C >= PH_CMD_END){
+                    before = get_cur_x();
+                    putc(_C);
+                    if(get_cur_x() < before || _C == '\n') lines++;
+                    if(lines >= 23){
+                        puts("Continue...");
+                        while(!(*in_reg));
+                        lines = 0;
+                        putc('\n');
+                    }
                 }
                 adv->cur++;
         }

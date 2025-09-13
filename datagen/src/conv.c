@@ -129,8 +129,10 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
         }
 
         if(c == '\\'){
-            escaped = 1;
-            continue;
+            if(!conv->verbatim){
+                escaped = 1;
+                continue;
+            }
         }else if(c == '\r'){
             continue;
         }
