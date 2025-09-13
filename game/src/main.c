@@ -43,7 +43,7 @@ extern unsigned int ph_data_len;
 int main(void) {
     PHAdventure adv;
 
-#if 1
+#if 0
 
     char *a = ": Hello world!\n";
     char buffer[20];

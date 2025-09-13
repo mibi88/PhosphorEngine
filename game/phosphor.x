@@ -50,7 +50,7 @@ SECTIONS
     } > rom
     .rodata : {
         *(.rodata)
-        *(.rodata.str1.4)
+        *(.rodata.str1.1)
         _romdata_start = . ;
     } > rom
     .bss : {

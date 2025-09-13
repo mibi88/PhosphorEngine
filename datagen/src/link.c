@@ -89,6 +89,8 @@ int ph_linker_link(PHLinker *linker, char *start) {
 
     unsigned char in_cmd = 0;
 
+    size_t start_bytes = 0;
+
     size_t cmd_str = 0;
     size_t cmd_offset = 0;
 
@@ -146,35 +148,6 @@ int ph_linker_link(PHLinker *linker, char *start) {
         }
     }
 
-    /* Start the output file with a goto to the start label if needed */
-
-    {
-        size_t n;
-        for(n=0;n<linker->label_count;n++){
-            if(!strcmp(start, linker->labels[n].name)){
-                size_t label_pos;
-
-                /* Found the label */
-
-                label_pos = linker->labels[n].pos;
-
-                if(label_pos){
-                    ph_buffer_putc(&linker->out_buffer, PH_CMD_GOTO);
-
-                    ph_buffer_putc(&linker->out_buffer,
-                                   label_pos&0xFF);
-                    ph_buffer_putc(&linker->out_buffer,
-                                   (label_pos>>8)&0xFF);
-                    ph_buffer_putc(&linker->out_buffer,
-                                   (label_pos>>16)&0xFF);
-                    ph_buffer_putc(&linker->out_buffer,
-                                   (label_pos>>24)&0xFF);
-                    byte_count = 5;
-                }
-            }
-        }
-    }
-
     label_id = 0;
 
     /* Update the label addresses */
@@ -210,11 +183,9 @@ int ph_linker_link(PHLinker *linker, char *start) {
                     }
                 }
 
-                if(!in_cmd){
-                    /* Output the char */
+                /* Output the char */
 
-                    byte_count++;
-                }
+                byte_count++;
             }else{
                 if(!cmd_str && !cmd_offset){
                     if(c == 0){
@@ -253,6 +224,36 @@ int ph_linker_link(PHLinker *linker, char *start) {
         }
     }
 
+    /* Start the output file with a goto to the start label if needed */
+
+    {
+        size_t n;
+        for(n=0;n<linker->label_count;n++){
+            if(!strcmp(start, linker->labels[n].name)){
+                size_t label_pos;
+
+                /* Found the label */
+
+                label_pos = linker->labels[n].pos;
+
+                if(label_pos){
+                    ph_buffer_putc(&linker->out_buffer, PH_CMD_GOTO);
+
+                    ph_buffer_putc(&linker->out_buffer,
+                                   label_pos&0xFF);
+                    ph_buffer_putc(&linker->out_buffer,
+                                   (label_pos>>8)&0xFF);
+                    ph_buffer_putc(&linker->out_buffer,
+                                   (label_pos>>16)&0xFF);
+                    ph_buffer_putc(&linker->out_buffer,
+                                   (label_pos>>24)&0xFF);
+
+                    start_bytes = 5;
+                }
+            }
+        }
+    }
+
     in_cmd = 0;
 
     /* Replace labels with offsets */
@@ -281,11 +282,9 @@ int ph_linker_link(PHLinker *linker, char *start) {
                     }
                 }
 
-                if(!in_cmd){
-                    /* Output the char */
+                /* Output the char */
 
-                    ph_buffer_putc(&linker->out_buffer, c);
-                }
+                ph_buffer_putc(&linker->out_buffer, c);
             }else{
                 if(!cmd_str && !cmd_offset){
                     if(c == 0){
@@ -305,7 +304,8 @@ int ph_linker_link(PHLinker *linker, char *start) {
 
                                 label_pos = linker->labels[n].pos;
 
-                                offset = (label_pos-linker->out_buffer.cur)&
+                                offset = (label_pos+start_bytes-
+                                          linker->out_buffer.cur-5)&
                                           0xFFFFFFFF;
 
                                 ph_buffer_putc(&linker->out_buffer,

@@ -43,8 +43,8 @@
 
 typedef struct {
     struct{
-        char name[PH_ADV_CASE_LEN_MAX];
-        int offset;
+        unsigned char name[PH_ADV_CASE_LEN_MAX];
+        size_t offset;
     } case_buffer[PH_ADV_CASE_MAX];
     size_t case_count;
 

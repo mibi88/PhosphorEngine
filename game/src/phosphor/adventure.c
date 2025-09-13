@@ -45,12 +45,32 @@ void ph_adventure_init(PHAdventure *adv, unsigned char *data) {
     adv->data = data;
 }
 
+static void iprint(char *name, int i) {
+    static char buffer[20];
+
+    puts(name);
+    puts(": ");
+    itoa(i, buffer, 20);
+    puts(buffer);
+    putc('\n');
+}
+
+#define _IP(v) iprint(#v, v)
+
+static int streq(unsigned char *a, unsigned char *b) {
+    for(;*a == *b && *b;a++,b++);
+    if(*a != *b) return 0;
+    return 1;
+}
+
 void ph_adventure_run(PHAdventure *adv) {
-    unsigned char in_command = 0;
-    unsigned char target;
+    size_t target;
+    unsigned char c;
+
+    static unsigned char buffer[PH_ADV_CASE_LEN_MAX];
 
     while(1){
-        switch(_C){
+        switch((c = _C)){
             case PH_CMD_GOTO:
                 adv->cur++;
                 target = _C;
@@ -60,8 +80,78 @@ void ph_adventure_run(PHAdventure *adv) {
                 target |= _C<<16;
                 adv->cur++;
                 target |= _C<<24;
-                adv->cur = target-4;
+                adv->cur++;
+                /* FIXME: Why do I have such a weird behaviour depending on the
+                 * sign. */
+                adv->cur += target+(target&0x80000000 ? 1 : 0);
                 break;
+            case PH_CMD_DCASE:
+            case PH_CMD_CASE:
+                if(adv->case_count < PH_ADV_CASE_MAX){
+                    size_t n;
+
+                    adv->cur++;
+                    for(n=0;_C;n++){
+                        adv->case_buffer[adv->case_count].name[n] = _C;
+                        adv->cur++;
+                    }
+                    adv->case_buffer[adv->case_count].name[n] = 0;
+                    adv->cur++;
+
+                    target = _C;
+                    adv->cur++;
+                    target |= _C<<8;
+                    adv->cur++;
+                    target |= _C<<16;
+                    adv->cur++;
+                    target |= _C<<24;
+                    adv->cur++;
+
+                    target = adv->cur+target+1;
+
+                    iprint(adv->case_buffer[adv->case_count].name, target);
+
+                    adv->case_buffer[adv->case_count].offset = target;
+                    if(c == PH_CMD_DCASE){
+                        puts("command: ");
+                        puts(adv->case_buffer[adv->case_count].name);
+                        putc('\n');
+                    }
+
+                    adv->case_count++;
+                }
+                break;
+            case PH_CMD_ASK:
+            case PH_CMD_ASKC:
+                puts("\n> ");
+                gets((char*)buffer, PH_ADV_CASE_LEN_MAX);
+
+                {
+                    size_t n;
+                    for(n=0;n<adv->case_count;n++){
+                        if(streq(adv->case_buffer[n].name,
+                                 buffer)){
+                            target = adv->case_buffer[n].offset;
+                            adv->cur = target;
+                            break;
+                        }
+                    }
+                    if(n == adv->case_count){
+                        puts("Invalid input\n");
+                        break;
+                    }
+                }
+                if(c == PH_CMD_ASKC) adv->case_count = 0;
+                break;
+            case PH_CMD_STARTVERBATIM:
+                puts("Verbatim start\n");
+                adv->cur++;
+                break;
+            case PH_CMD_ENDVERBATIM:
+                puts("Verbatim end\n");
+                adv->cur++;
+                break;
+
             default:
                 putc(_C);
                 adv->cur++;

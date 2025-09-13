@@ -131,6 +131,8 @@ int main(int argc, char **argv) {
 
     fwrite(linker.out_buffer.data, 1, linker.out_buffer.size, out);
 
+    fclose(out);
+
     ph_linker_free(&linker);
 
     return EXIT_SUCCESS;
