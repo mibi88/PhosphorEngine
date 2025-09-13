@@ -56,6 +56,8 @@ void putc(char c) {
 void gets(char *str, size_t max) {
     size_t i = 0;
 
+    while(*in_reg);
+
     while(1){
         char c;
 

@@ -45,6 +45,8 @@ void ph_adventure_init(PHAdventure *adv, unsigned char *data) {
     adv->data = data;
 }
 
+#if 1 /* Debugging stuff */
+
 static void iprint(char *name, int i) {
     static char buffer[20];
 
@@ -57,17 +59,25 @@ static void iprint(char *name, int i) {
 
 #define _IP(v) iprint(#v, v)
 
+#endif
+
 static int streq(unsigned char *a, unsigned char *b) {
     for(;*a == *b && *b;a++,b++);
     if(*a != *b) return 0;
     return 1;
 }
 
+static volatile char *const in_reg = (void*)(1024*1024+1);
+
 void ph_adventure_run(PHAdventure *adv) {
     size_t target;
     unsigned char c;
 
     static unsigned char buffer[PH_ADV_CASE_LEN_MAX];
+
+    unsigned char lines = 0;
+
+    unsigned short int before;
 
     while(1){
         switch((c = _C)){
@@ -109,12 +119,10 @@ void ph_adventure_run(PHAdventure *adv) {
 
                     target = adv->cur+target+1;
 
-                    iprint(adv->case_buffer[adv->case_count].name, target);
-
                     adv->case_buffer[adv->case_count].offset = target;
                     if(c == PH_CMD_DCASE){
                         puts("command: ");
-                        puts(adv->case_buffer[adv->case_count].name);
+                        puts((char*)adv->case_buffer[adv->case_count].name);
                         putc('\n');
                     }
 
@@ -153,7 +161,16 @@ void ph_adventure_run(PHAdventure *adv) {
                 break;
 
             default:
+                /* TODO: Add word wrap etc. */
+                before = get_cur_x();
                 putc(_C);
+                if(get_cur_x() < before || _C == '\n') lines++;
+                if(lines >= 23){
+                    puts("Continue...");
+                    while(!(*in_reg));
+                    lines = 0;
+                    putc('\n');
+                }
                 adv->cur++;
         }
     }
