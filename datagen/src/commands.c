@@ -296,6 +296,8 @@ static int note(void *_conv, size_t argc, char **argv) {
     unsigned char octave;
     unsigned char i;
 
+    unsigned char note;
+
     unsigned short int duration;
 
     if(conv->verbatim) return PH_CONV_SUCCESS;
@@ -303,22 +305,29 @@ static int note(void *_conv, size_t argc, char **argv) {
     if(argc > 3) return PH_CONV_E_TOO_MANY_ARGS;
 
     if(strlen(argv[1]) != 3) return PH_CONV_E_INCORRECT_ARGS;
-    if(argv[1][2] < '0' || argv[1][2] > '7'){
-        return PH_CONV_E_INCORRECT_ARGS;
-    }
-    octave = argv[1][2]-'0';
-    for(i=0;i<PH_CMD_SEMITONES;i++){
-        if(!memcmp(argv[1], semitones[i], 2)){
-            semitone = i;
-            break;
+
+    if(strcmp(argv[1], "===")){
+        if(argv[1][2] < '0' || argv[1][2] > '7'){
+            return PH_CONV_E_INCORRECT_ARGS;
         }
+        octave = argv[1][2]-'0';
+        for(i=0;i<PH_CMD_SEMITONES;i++){
+            if(!memcmp(argv[1], semitones[i], 2)){
+                semitone = i;
+                break;
+            }
+        }
+        if(i >= PH_CMD_SEMITONES) return PH_CONV_E_INCORRECT_ARGS;
+
+        note = octave|(semitone<<3);
+    }else{
+        note = 0x80;
     }
-    if(i >= PH_CMD_SEMITONES) return PH_CONV_E_INCORRECT_ARGS;
 
     duration = atoi(argv[2]);
 
     ph_buffer_putc(&conv->buffer, PH_CMD_NOTE);
-    ph_buffer_putc(&conv->buffer, octave|(semitone<<3));
+    ph_buffer_putc(&conv->buffer, note);
     ph_buffer_putc(&conv->buffer, duration&0xFF);
     ph_buffer_putc(&conv->buffer, (duration>>8)&0xFF);
 

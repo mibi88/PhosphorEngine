@@ -106,6 +106,26 @@ unsigned short int get_cur_y(void) {
     return *ypos_reg;
 }
 
+void term_size(unsigned short int *w, unsigned short int *h) {
+    unsigned short int x, y;
+
+    x = get_cur_x();
+    y = get_cur_y();
+
+    set_cur_x(0xFFFF);
+    set_cur_y(0xFFFF);
+
+    *w = get_cur_x();
+    *h = get_cur_y();
+
+    set_cur_x(x);
+    set_cur_y(y);
+}
+
+unsigned long int mstime(void) {
+    return *time_reg;
+}
+
 void itoa(int i, char *buffer, size_t size) {
     char *max = buffer+size;
     char *start;
@@ -136,4 +156,9 @@ void itoa(int i, char *buffer, size_t size) {
         *buffer = '0'+(i%10);
         i /= 10;
     }
+}
+
+int strcmp(char *a, char *b) {
+    for(;*a == *b && *b;a++,b++);
+    return *a-*b;
 }

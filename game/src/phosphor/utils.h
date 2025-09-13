@@ -47,7 +47,10 @@ void set_cur_x(unsigned short int x);
 void set_cur_y(unsigned short int y);
 unsigned short int get_cur_x(void);
 unsigned short int get_cur_y(void);
+void term_size(unsigned short int *w, unsigned short int *h);
+unsigned long int mstime(void);
 
 void itoa(int i, char *buffer, size_t size);
+int strcmp(char *a, char *b);
 
 #endif

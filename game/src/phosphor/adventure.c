@@ -61,16 +61,13 @@ static void iprint(char *name, int i) {
 
 #endif
 
-static int streq(unsigned char *a, unsigned char *b) {
-    for(;*a == *b && *b;a++,b++);
-    if(*a != *b) return 0;
-    return 1;
-}
-
 static volatile char *const in_reg = (void*)(1024*1024+1);
+
+#define _VALID(c) ((c) < PH_CMD_START || (c) >= PH_CMD_END)
 
 void ph_adventure_run(PHAdventure *adv) {
     size_t target;
+    size_t start;
     unsigned char c;
 
     static unsigned char buffer[PH_ADV_CASE_LEN_MAX];
@@ -79,8 +76,95 @@ void ph_adventure_run(PHAdventure *adv) {
 
     unsigned short int before;
 
+    unsigned char halign = PH_CMD_ALIGN_LEFT;
+    unsigned char valign = PH_CMD_ALIGN_TOP;
+
+    unsigned char note;
+
+    unsigned char loading_bgm = 0;
+
+    unsigned short int w, h;
+
+    unsigned char verbatim = 0;
+
+    unsigned short int x;
+
+    size_t i;
+
+    term_size(&w, &h);
+
     while(1){
         switch((c = _C)){
+            case PH_CMD_STARTVERBATIM:
+                verbatim = 1;
+                adv->cur++;
+                break;
+
+            case PH_CMD_ENDVERBATIM:
+                verbatim = 0;
+                adv->cur++;
+                break;
+
+            case PH_CMD_CLEAR:
+                for(i=0;i<h;i++){
+                    putc('\n');
+                }
+                set_cur_x(0);
+                set_cur_y(0);
+                adv->cur++;
+                break;
+
+            case PH_CMD_HALIGN:
+                adv->cur++;
+                halign = _C&3;
+                adv->cur++;
+                break;
+
+            case PH_CMD_VALIGN:
+                adv->cur++;
+                valign = _C&3;
+                adv->cur++;
+                break;
+
+            case PH_CMD_SETX:
+                adv->cur++;
+                target = _C;
+                adv->cur++;
+                target |= _C<<8;
+                adv->cur++;
+                set_cur_x(target);
+                break;
+
+            case PH_CMD_SETY:
+                adv->cur++;
+                target = _C;
+                adv->cur++;
+                target |= _C<<8;
+                adv->cur++;
+                set_cur_x(target);
+                break;
+
+            case PH_CMD_PAGEBREAK:
+                /* TODO */
+                adv->cur++;
+                if(get_cur_x()){
+                    set_cur_x(0);
+                    set_cur_y(h-1);
+                    puts("Continue...");
+                    while(!(*in_reg));
+
+                    for(i=0;i<h;i++){
+                        putc('\n');
+                    }
+                    set_cur_x(0);
+                    set_cur_y(0);
+                }
+                break;
+
+            case PH_CMD_LABEL:
+                /* NOTE: This command shouldn't occur in normal conditions */
+                break;
+
             case PH_CMD_GOTO:
                 adv->cur++;
                 target = _C;
@@ -131,6 +215,10 @@ void ph_adventure_run(PHAdventure *adv) {
                 }
                 break;
 
+            case PH_CMD_CLEARCASES:
+                adv->case_count = 0;
+                break;
+
             case PH_CMD_ASK:
             case PH_CMD_ASKC:
                 puts("\n> ");
@@ -139,8 +227,8 @@ void ph_adventure_run(PHAdventure *adv) {
                 {
                     size_t n;
                     for(n=0;n<adv->case_count;n++){
-                        if(streq(adv->case_buffer[n].name,
-                                 buffer)){
+                        if(!strcmp((char*)adv->case_buffer[n].name,
+                                   (char*)buffer)){
                             target = adv->case_buffer[n].offset;
                             adv->cur = target;
                             break;
@@ -154,30 +242,100 @@ void ph_adventure_run(PHAdventure *adv) {
                 if(c == PH_CMD_ASKC) adv->case_count = 0;
                 break;
 
-            case PH_CMD_STARTVERBATIM:
-                puts("Verbatim start\n");
+            case PH_CMD_DELAY:
                 adv->cur++;
+                target = _C;
+                adv->cur++;
+                target |= _C<<8;
+                adv->cur++;
+                start = mstime();
+                while(mstime()-start < target){
+                    /* Run the sound engine */
+                }
                 break;
 
-            case PH_CMD_ENDVERBATIM:
-                puts("Verbatim end\n");
+            case PH_CMD_NOTE:
                 adv->cur++;
+                note = _C;
+                adv->cur++;
+                target = _C;
+                adv->cur++;
+                target |= _C<<8;
+                adv->cur++;
+                if(loading_bgm){
+                    /* TODO */
+                }else{
+                    beep(note, target);
+                }
+                break;
+
+            case PH_CMD_STARTBGM:
+                loading_bgm = 1;
+                break;
+
+            case PH_CMD_ENDBGM:
+                loading_bgm = 0;
                 break;
 
             default:
                 /* TODO: Add word wrap etc. */
-                if(_C < PH_CMD_START || _C >= PH_CMD_END){
-                    before = get_cur_x();
-                    putc(_C);
-                    if(get_cur_x() < before || _C == '\n') lines++;
-                    if(lines >= 23){
-                        puts("Continue...");
-                        while(!(*in_reg));
-                        lines = 0;
+                if(_VALID(_C)){
+                    if(verbatim){
+                        putc(_C);
+                        adv->cur++;
+                    }else{
+                        /* Wrap */
+                        start = adv->cur;
+                        for(i=0;i<w && _VALID(_C) && _C>=0x20;i++){
+                            size_t n;
+
+                            /* Check if text up to the next boundary can fit
+                             * on this line. */
+
+                            target = adv->cur;
+                            for(n=i;_C != ' ' && _C != '\t' && _C != '\n' &&
+                                _VALID(_C);n++,adv->cur++){
+                                if(n >= w){
+                                    adv->cur = target;
+                                    break;
+                                }
+                            }
+                            if(n < w) adv->cur++;
+                            i=n;
+                        }
+
+                        /* NOTE: target contains the width here */
+                        target = adv->cur-start;
+
+                        if(halign == PH_CMD_ALIGN_LEFT){
+                            x = 0;
+                        }else if(halign == PH_CMD_ALIGN_CENTER){
+                            x = (w-1-target)/2;
+                        }else if(halign == PH_CMD_ALIGN_RIGHT){
+                            x = w-1-target;
+                        }
+
+                        adv->cur = start;
+
+                        set_cur_x(x);
+                        for(i=0;i<target;i++){
+                            putc(_C);
+                            adv->cur++;
+                        }
                         putc('\n');
+                        if(get_cur_y() == h-1){
+                            set_cur_x(0);
+                            puts("Continue...");
+                            while(!(*in_reg));
+
+                            for(i=0;i<h;i++){
+                                putc('\n');
+                            }
+                            set_cur_x(0);
+                            set_cur_y(0);
+                        }
                     }
                 }
-                adv->cur++;
         }
     }
 }
