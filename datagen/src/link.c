@@ -81,12 +81,18 @@ int ph_linker_link(PHLinker *linker, char *start) {
     size_t i;
     unsigned char label[PH_CONV_TOKEN_MAX+1];
     size_t label_cur = 0;
+    unsigned char str[PH_CONV_TOKEN_MAX+1];
+    unsigned char str_cur = 0;
     unsigned char in_label = 0;
+
+    size_t label_id = 0;
 
     unsigned char in_cmd = 0;
 
     size_t cmd_str = 0;
     size_t cmd_offset = 0;
+
+    size_t byte_count = 0;
 
     /* TODO: Put this in a separate file and pass it as an argument for
      * flexibility */
@@ -163,10 +169,91 @@ int ph_linker_link(PHLinker *linker, char *start) {
                                    (label_pos>>16)&0xFF);
                     ph_buffer_putc(&linker->out_buffer,
                                    (label_pos>>24)&0xFF);
+                    byte_count = 5;
                 }
             }
         }
     }
+
+    label_id = 0;
+
+    /* Update the label addresses */
+    for(i=0;i<linker->in_buffer.size;i++){
+        unsigned char c = linker->in_buffer.data[i];
+
+        if(in_label){
+            if(c == 0){
+                /* Update the label pos */
+
+                linker->labels[label_id].pos -= (i-byte_count);
+
+                label_id++;
+
+                in_label = 0;
+            }
+        }else if(c == PH_CMD_LABEL){
+            in_label = 1;
+            label_cur = 0;
+        }else{
+            if(!in_cmd){
+                size_t n;
+
+                for(n=0;n<PH_LABELCMD_AMOUNT;n++){
+                    if(c == commands[n].id){
+                        in_cmd = 1;
+                        cmd_str = commands[n].str_id;
+                        cmd_offset = commands[n].offset;
+
+                        str_cur = 0;
+
+                        break;
+                    }
+                }
+
+                if(!in_cmd){
+                    /* Output the char */
+
+                    byte_count++;
+                }
+            }else{
+                if(!cmd_str && !cmd_offset){
+                    if(c == 0){
+                        size_t n;
+
+                        str[str_cur] = 0;
+
+                        /* Finished loading the label. */
+
+                        for(n=0;n<linker->label_count;n++){
+                            if(!strcmp((char*)str,
+                                       (char*)linker->labels[n].name)){
+                                break;
+                            }
+                        }
+                        if(n == linker->label_count){
+                            linker->error = PH_LINK_E_UNKNOWN_LABEL;
+                            return 1;
+                        }
+
+                        byte_count += 4;
+
+                        in_cmd = 0;
+                    }else if(str_cur < PH_CONV_TOKEN_MAX-1){
+                        str[str_cur] = c;
+                        str_cur++;
+                    }
+                }else{
+                    /* Output the char */
+
+                    byte_count++;
+                }
+                if(cmd_offset) cmd_offset--;
+                else if(cmd_str && c == 0) cmd_str--;
+            }
+        }
+    }
+
+    in_cmd = 0;
 
     /* Replace labels with offsets */
     for(i=0;i<linker->in_buffer.size;i++){
@@ -188,7 +275,7 @@ int ph_linker_link(PHLinker *linker, char *start) {
                         cmd_str = commands[n].str_id;
                         cmd_offset = commands[n].offset;
 
-                        label_cur = 0;
+                        str_cur = 0;
 
                         break;
                     }
@@ -204,12 +291,12 @@ int ph_linker_link(PHLinker *linker, char *start) {
                     if(c == 0){
                         size_t n;
 
-                        label[label_cur] = 0;
+                        str[str_cur] = 0;
 
                         /* Finished loading the label. */
 
                         for(n=0;n<linker->label_count;n++){
-                            if(!strcmp((char*)label,
+                            if(!strcmp((char*)str,
                                        (char*)linker->labels[n].name)){
                                 unsigned long int offset;
                                 size_t label_pos;
@@ -218,8 +305,7 @@ int ph_linker_link(PHLinker *linker, char *start) {
 
                                 label_pos = linker->labels[n].pos;
 
-                                offset = ((label_pos-i)-
-                                          (i-linker->out_buffer.cur))&
+                                offset = (label_pos-linker->out_buffer.cur)&
                                           0xFFFFFFFF;
 
                                 ph_buffer_putc(&linker->out_buffer,
@@ -230,13 +316,14 @@ int ph_linker_link(PHLinker *linker, char *start) {
                                                (offset>>16)&0xFF);
                                 ph_buffer_putc(&linker->out_buffer,
                                                (offset>>24)&0xFF);
+                                break;
                             }
                         }
 
                         in_cmd = 0;
-                    }else if(label_cur < PH_CONV_TOKEN_MAX-1){
-                        label[label_cur] = c;
-                        label_cur++;
+                    }else if(str_cur < PH_CONV_TOKEN_MAX-1){
+                        str[str_cur] = c;
+                        str_cur++;
                     }
                 }else{
                     /* Output the char */
