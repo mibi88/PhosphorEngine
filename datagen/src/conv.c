@@ -140,7 +140,7 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
         if(strchr(ifs, c) == NULL){
             if(line_start){
                 if(newlines <= 1 && !command && !has_newline &&
-                   !conv->verbatim){
+                   !conv->verbatim && !has_space){
                     ph_buffer_putc(&conv->buffer, ' ');
                 }
                 line_start = 0;

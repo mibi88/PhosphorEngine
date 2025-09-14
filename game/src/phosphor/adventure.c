@@ -285,22 +285,30 @@ void ph_adventure_run(PHAdventure *adv) {
                     }else{
                         /* Wrap */
                         start = adv->cur;
-                        for(i=0;i<w && _VALID(_C) && _C>=0x20;i++){
+                        for(i=0;i<w && _VALID(_C) && _C>=0x20;){
                             size_t n;
 
                             /* Check if text up to the next boundary can fit
                              * on this line. */
 
                             target = adv->cur;
-                            for(n=i;_C != ' ' && _C != '\t' && _C != '\n' &&
-                                _VALID(_C);n++,adv->cur++){
+                            for(n=i;;n++,adv->cur++){
                                 if(n >= w){
                                     adv->cur = target;
                                     break;
                                 }
+                                if(_C == ' ' || _C == '\t' || _C == '\n' ||
+                                   !_VALID(_C)) break;
                             }
                             if(!_VALID(_C)) break;
-                            if(n < w) adv->cur++;
+                            if(n < w){
+                                if(_C == '\n'){
+                                    adv->cur++;
+                                    break;
+                                }
+                                adv->cur++;
+                                n++;
+                            }
                             i=n;
                         }
 

@@ -2,7 +2,9 @@
 
 #clear
 
-                            ~~ OBSCURITY'S QUEST HELP ~~
+#halign center
+~~ OBSCURITY'S QUEST HELP ~~
+#halign left
 
 TODO
 
@@ -74,6 +76,8 @@ Thanks for playing!
 #halign right
 END
 #halign left
+
+text
 
 #pagebreak
 
