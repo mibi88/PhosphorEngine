@@ -65,6 +65,20 @@ static volatile char *const in_reg = (void*)(1024*1024+1);
 
 #define _VALID(c) ((c) < PH_CMD_START || (c) >= PH_CMD_END)
 
+#define _PAGEBREAK(msg) \
+    { \
+        set_cur_x(0); \
+        puts("Continue..."); \
+        while(*in_reg); \
+        while(!(*in_reg)); \
+\
+        for(i=0;i<h;i++){ \
+            putc('\n'); \
+        } \
+        set_cur_x(0); \
+        set_cur_y(0); \
+    }
+
 void ph_adventure_run(PHAdventure *adv) {
     size_t target;
     size_t start;
@@ -145,18 +159,7 @@ void ph_adventure_run(PHAdventure *adv) {
                 break;
 
             case PH_CMD_PAGEBREAK:
-                if(get_cur_y()){
-                    set_cur_x(0);
-                    set_cur_y(h-1);
-                    puts("Continue...");
-                    while(!(*in_reg));
-
-                    for(i=0;i<h;i++){
-                        putc('\n');
-                    }
-                    set_cur_x(0);
-                    set_cur_y(0);
-                }
+                _PAGEBREAK();
                 adv->cur++;
                 break;
 
@@ -220,7 +223,9 @@ void ph_adventure_run(PHAdventure *adv) {
 
             case PH_CMD_ASK:
             case PH_CMD_ASKC:
-                puts("\n> ");
+                if(get_cur_x()) putc('\n');
+                set_cur_y(h-1);
+                puts(" > ");
                 gets((char*)buffer, PH_ADV_CASE_LEN_MAX);
 
                 {
@@ -234,8 +239,19 @@ void ph_adventure_run(PHAdventure *adv) {
                         }
                     }
                     if(n == adv->case_count){
-                        puts("Invalid input\n");
+                        set_cur_y(h-1);
+                        set_cur_x(0);
+                        for(i=0;i<w;i++) putc(' ');
+                        set_cur_x(w-1-sizeof("(Invalid input)"));
+                        puts("(Invalid input)");
+                        set_cur_x(0);
                         break;
+                    }else{
+                        for(i=0;i<h;i++){
+                            putc('\n');
+                        }
+                        set_cur_x(0);
+                        set_cur_y(0);
                     }
                 }
                 if(c == PH_CMD_ASKC) adv->case_count = 0;
@@ -330,18 +346,8 @@ void ph_adventure_run(PHAdventure *adv) {
                             putc(_C);
                             adv->cur++;
                         }
-                        putc('\n');
-                        if(get_cur_y() >= h-1){
-                            set_cur_x(0);
-                            puts("Continue...");
-                            while(!(*in_reg));
-
-                            for(i=0;i<h;i++){
-                                putc('\n');
-                            }
-                            set_cur_x(0);
-                            set_cur_y(0);
-                        }
+                        if(get_cur_y() < h-1) putc('\n');
+                        if(get_cur_y() >= h-1) _PAGEBREAK();
                     }
                 }
         }
