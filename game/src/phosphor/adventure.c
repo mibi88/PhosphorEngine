@@ -38,6 +38,8 @@
 
 #include <format.h>
 
+/* TODO: Clean this mess up */
+
 #define _C (adv->data[adv->cur])
 
 void ph_adventure_init(PHAdventure *adv, unsigned char *data) {
@@ -45,7 +47,7 @@ void ph_adventure_init(PHAdventure *adv, unsigned char *data) {
     adv->data = data;
 }
 
-#if 1 /* Debugging stuff */
+#if 0 /* Debugging stuff */
 
 static void iprint(char *name, int i) {
     static char buffer[20];
@@ -112,8 +114,6 @@ void ph_adventure_run(PHAdventure *adv) {
     static unsigned char buffer[PH_ADV_CASE_LEN_MAX];
 
     unsigned short int lines = 0;
-
-    unsigned short int before;
 
     unsigned char halign = PH_CMD_ALIGN_LEFT;
     unsigned char valign = PH_CMD_ALIGN_TOP;

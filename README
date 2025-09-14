@@ -5,8 +5,8 @@ Phosphor Engine is small engine to create text adventures. It is made up of a
 rv32i emulator (if it can be called an emulator, a conversion tool to generate
 the text adventure data and the engine code.
 
-I created it for the js13k game jam 2025 but I'm not sure if I'll be able to
-make a game with it before the deadline.
+I created it for the js13k game jam 2025 but I was unable to finish it before
+the deadline.
 
 The engine code is in the game folder.
 
@@ -53,11 +53,16 @@ should be able to play the text adventure!
 
     TODO
 
-[ ] Code the conversion tool
-[ ] Code the engine
+[x] Code the conversion tool.
+[x] Code the engine.
 [ ] Use a full libgcc or compiler-rt build instead of this messy libgcc source
     code downloading script, because I was unable to compile libgcc or
     compiler-rt entirely for rv32i so far.
+[ ] Allow linking multiple game data files to one output file.
+[ ] Clean up the datagen code.
+[ ] Clean up the engine code.
+[ ] Add commands to allow acquiring objects, unlocking commands with them,
+    and using them, i.e. removing them.
 
     LICENSE
 

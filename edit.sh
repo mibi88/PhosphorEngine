@@ -37,4 +37,4 @@
 
 nano $(find -type f ! -path "./.git/*" ! -path "./build/*" \
             ! -path "./game/build/*" ! -path "./game/src/libgcc_parts/*" \
-            -exec grep -Iq . {} \; -print | sort)
+            ! -path "./game/src/data/*" -exec grep -Iq . {} \; -print | sort)
