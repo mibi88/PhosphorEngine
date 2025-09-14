@@ -65,18 +65,43 @@ static volatile char *const in_reg = (void*)(1024*1024+1);
 
 #define _VALID(c) ((c) < PH_CMD_START || (c) >= PH_CMD_END)
 
-#define _PAGEBREAK(msg) \
+#define _ALIGN() \
     { \
-        set_cur_x(0); \
-        puts("Continue..."); \
-        while(*in_reg); \
-        while(!(*in_reg)); \
-\
+        putc('\n'); \
+        if(current_valign == PH_CMD_ALIGN_CENTER){ \
+            size_t n; \
+ \
+            for(n=0;n<(h-1-lines)/2;n++){ \
+                putc('\n'); \
+            } \
+        } \
+    }
+
+#define _CLEAR() \
+    { \
         for(i=0;i<h;i++){ \
             putc('\n'); \
         } \
         set_cur_x(0); \
         set_cur_y(0); \
+        lines = 0; \
+        current_valign = valign; \
+        if(current_valign != PH_CMD_ALIGN_TOP) set_cur_y(h); \
+    }
+
+#define _PAGEBREAK() \
+    { \
+        size_t n; \
+ \
+        _ALIGN(); \
+        set_cur_x(0); \
+        set_cur_y(h-1); \
+        for(n=0;n<w;n++) putc(' '); \
+        set_cur_x(0); \
+        puts("Continue..."); \
+        while(*in_reg); \
+        while(!(*in_reg)); \
+        _CLEAR(); \
     }
 
 void ph_adventure_run(PHAdventure *adv) {
@@ -86,12 +111,14 @@ void ph_adventure_run(PHAdventure *adv) {
 
     static unsigned char buffer[PH_ADV_CASE_LEN_MAX];
 
-    unsigned char lines = 0;
+    unsigned short int lines = 0;
 
     unsigned short int before;
 
     unsigned char halign = PH_CMD_ALIGN_LEFT;
     unsigned char valign = PH_CMD_ALIGN_TOP;
+
+    unsigned char current_valign = valign;
 
     unsigned char note;
 
@@ -103,6 +130,8 @@ void ph_adventure_run(PHAdventure *adv) {
 
     unsigned short int x;
 
+    unsigned char valid = 1;
+
     size_t i;
 
     term_size(&w, &h);
@@ -112,6 +141,7 @@ void ph_adventure_run(PHAdventure *adv) {
             case PH_CMD_STARTVERBATIM:
                 verbatim = 1;
                 adv->cur++;
+                lines = get_cur_y();
                 break;
 
             case PH_CMD_ENDVERBATIM:
@@ -120,11 +150,7 @@ void ph_adventure_run(PHAdventure *adv) {
                 break;
 
             case PH_CMD_CLEAR:
-                for(i=0;i<h;i++){
-                    putc('\n');
-                }
-                set_cur_x(0);
-                set_cur_y(0);
+                _CLEAR();
                 adv->cur++;
                 break;
 
@@ -223,6 +249,8 @@ void ph_adventure_run(PHAdventure *adv) {
 
             case PH_CMD_ASK:
             case PH_CMD_ASKC:
+                if(valid) _ALIGN();
+
                 if(get_cur_x()) putc('\n');
                 set_cur_y(h-1);
                 puts(" > ");
@@ -239,6 +267,7 @@ void ph_adventure_run(PHAdventure *adv) {
                         }
                     }
                     if(n == adv->case_count){
+                        valid = 0;
                         set_cur_y(h-1);
                         set_cur_x(0);
                         for(i=0;i<w;i++) putc(' ');
@@ -247,11 +276,8 @@ void ph_adventure_run(PHAdventure *adv) {
                         set_cur_x(0);
                         break;
                     }else{
-                        for(i=0;i<h;i++){
-                            putc('\n');
-                        }
-                        set_cur_x(0);
-                        set_cur_y(0);
+                        valid = 1;
+                        _CLEAR();
                     }
                 }
                 if(c == PH_CMD_ASKC) adv->case_count = 0;
@@ -300,6 +326,7 @@ void ph_adventure_run(PHAdventure *adv) {
                         adv->cur++;
                     }else{
                         /* Wrap */
+
                         start = adv->cur;
                         for(i=0;i<w && _VALID(_C) && _C>=0x20;){
                             size_t n;
@@ -344,10 +371,16 @@ void ph_adventure_run(PHAdventure *adv) {
                         set_cur_x(x);
                         for(i=0;i<target;i++){
                             putc(_C);
+                            if(_C == '\n'){
+                                lines++;
+                            }
                             adv->cur++;
                         }
-                        if(get_cur_y() < h-1) putc('\n');
-                        if(get_cur_y() >= h-1) _PAGEBREAK();
+                        if(lines < h-1){
+                            putc('\n');
+                            lines++;
+                        }
+                        if(lines >= h-1) _PAGEBREAK();
                     }
                 }
         }
