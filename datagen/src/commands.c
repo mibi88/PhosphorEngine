@@ -360,6 +360,200 @@ static int endbgm(void *_conv, size_t argc, char **argv) {
     return PH_CONV_SUCCESS;
 }
 
+static int var(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    /* These value map to the PH_CMD_VAR_* enumeration constants */
+    static const char *const subcmds[] = {
+        "set",
+        "load",
+        "store",
+        "del",
+        NULL
+    };
+    size_t i;
+
+    if(conv->verbatim) return PH_CONV_SUCCESS;
+    if(argc < 3) return PH_CONV_E_TOO_FEW_ARGS;
+
+    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+
+    for(i=0;subcmds[i] != NULL;i++){
+        if(!strcmp(argv[1], subcmds[i])){
+            break;
+        }
+    }
+    if(subcmds[i] == NULL) return PH_CONV_E_INCORRECT_ARGS;
+    ph_buffer_putc(&conv->buffer, i);
+
+    if(i == PH_CMD_VAR_SET){
+        long unsigned int n = 0;
+
+        i = 0;
+
+        if(argv[3][i] == '-') i++;
+
+        for(;argv[3][i];i++){
+            if(argv[3][i] >= '0' && argv[3][i] <= '9'){
+                n *= 10;
+                n += argv[3][i]-'0';
+            }
+        }
+
+        if(argv[3][0] == '-') n = n^0xFFFFFFFF;
+
+        ph_buffer_putc(&conv->buffer, n&0xFF);
+        ph_buffer_putc(&conv->buffer, (n&0xFF)<<8);
+        ph_buffer_putc(&conv->buffer, (n&0xFF)<<16);
+        ph_buffer_putc(&conv->buffer, (n&0xFF)<<24);
+        if(argc > 4) return PH_CONV_E_TOO_MANY_ARGS;
+    }else if(argc > 3){
+        return PH_CONV_E_TOO_MANY_ARGS;
+    }
+
+    ph_buffer_write(&conv->buffer, (unsigned char*)argv[2], strlen(argv[2])+1);
+
+    return PH_CONV_SUCCESS;
+}
+
+static int math(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    /* These value map to the PH_CMD_VAR_* enumeration constants */
+    static const char *const subcmds[] = {
+        "add",
+        "sub",
+        "mul",
+        "div",
+        "mod",
+        "lsl",
+        "lsr",
+        "and",
+        "or",
+        "xor",
+        NULL
+    };
+    size_t i;
+
+    if(conv->verbatim) return PH_CONV_SUCCESS;
+    if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
+    if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
+
+    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+
+    for(i=0;subcmds[i] != NULL;i++){
+        if(!strcmp(argv[1], subcmds[i])){
+            break;
+        }
+    }
+    if(subcmds[i] == NULL) return PH_CONV_E_INCORRECT_ARGS;
+    ph_buffer_putc(&conv->buffer, i);
+
+    return PH_CONV_SUCCESS;
+}
+
+static int tmp(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    /* These value map to the PH_CMD_VAR_* enumeration constants */
+    static const char *const subcmds[] = {
+        "push",
+        "pull",
+        "load",
+        "use",
+        NULL
+    };
+    size_t i;
+
+    if(conv->verbatim) return PH_CONV_SUCCESS;
+    if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
+    if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
+
+    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+
+    for(i=0;subcmds[i] != NULL;i++){
+        if(!strcmp(argv[1], subcmds[i])){
+            break;
+        }
+    }
+    if(subcmds[i] == NULL) return PH_CONV_E_INCORRECT_ARGS;
+    ph_buffer_putc(&conv->buffer, i);
+
+    return PH_CONV_SUCCESS;
+}
+
+
+
+static int branch(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    /* TODO */
+
+    (void)conv;
+    (void)argc;
+    (void)argv;
+
+    return PH_CONV_SUCCESS;
+}
+
+
+
+static int io(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    /* These value map to the PH_CMD_VAR_* enumeration constants */
+    static const char *const subcmds[] = {
+        /* TODO */
+        NULL
+    };
+    size_t i;
+
+    if(conv->verbatim) return PH_CONV_SUCCESS;
+    if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
+    if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
+
+    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+
+    for(i=0;subcmds[i] != NULL;i++){
+        if(!strcmp(argv[1], subcmds[i])){
+            break;
+        }
+    }
+    if(subcmds[i] == NULL) return PH_CONV_E_INCORRECT_ARGS;
+    ph_buffer_putc(&conv->buffer, i);
+
+    return PH_CONV_SUCCESS;
+}
+
+
+
+static int ext(void *_conv, size_t argc, char **argv) {
+    PHConv *conv = _conv;
+
+    /* These value map to the PH_CMD_VAR_* enumeration constants */
+    static const char *const subcmds[] = {
+        /* TODO */
+        NULL
+    };
+    size_t i;
+
+    if(conv->verbatim) return PH_CONV_SUCCESS;
+    if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
+    if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
+
+    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+
+    for(i=0;subcmds[i] != NULL;i++){
+        if(!strcmp(argv[1], subcmds[i])){
+            break;
+        }
+    }
+    if(subcmds[i] == NULL) return PH_CONV_E_INCORRECT_ARGS;
+    ph_buffer_putc(&conv->buffer, i);
+
+    return PH_CONV_SUCCESS;
+}
+
 static int (*fncs[])(void *_conv, size_t argc, char **argv) = {
     startverbatim,
     endverbatim,
@@ -379,7 +573,15 @@ static int (*fncs[])(void *_conv, size_t argc, char **argv) = {
     delay,
     note,
     startbgm,
-    endbgm
+    endbgm,
+
+    var,
+    math,
+    tmp,
+    branch,
+    io,
+
+    ext
 };
 
 static char *names[] = {
@@ -401,7 +603,16 @@ static char *names[] = {
     "delay",
     "note",
     "startbgm", /* Start background music */
-    "endbgm" /* End background music */
+    "endbgm", /* End background music */
+
+    /* Arithmetic commands */
+    "var",
+    "math",
+    "tmp",
+    "branch",
+    "io",
+
+    "ext"
 };
 
 PHCommands ph_commands = {

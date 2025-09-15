@@ -67,6 +67,12 @@ enum {
     PH_CMD_STARTBGM,
     PH_CMD_ENDBGM,
 
+    PH_CMD_VAR,
+    PH_CMD_MATH,
+    PH_CMD_TMPOP,
+    PH_CMD_BRANCH,
+    PH_CMD_IOOP,
+
     PH_CMD_EXTENDED,
 
     PH_CMD_END
@@ -78,6 +84,42 @@ enum {
     PH_CMD_ALIGN_CENTER = 1,
     PH_CMD_ALIGN_RIGHT  = 2,
     PH_CMD_ALIGN_BOTTOM = 2
+};
+
+enum {
+    PH_CMD_VAR_SET,
+    PH_CMD_VAR_LOAD,
+    PH_CMD_VAR_STORE,
+    PH_CMD_VAR_DEL
+};
+
+enum {
+    PH_CMD_MATH_ADD,
+    PH_CMD_MATH_SUB,
+    PH_CMD_MATH_MUL,
+    PH_CMD_MATH_DIV,
+    PH_CMD_MATH_MOD,
+    PH_CMD_MATH_LSL,
+    PH_CMD_MATH_LSR,
+    PH_CMD_MATH_AND,
+    PH_CMD_MATH_OR,
+    PH_CMD_MATH_XOR
+};
+
+enum {
+    PH_CMD_TMP_PUSH,
+    PH_CMD_TMP_PULL,
+    PH_CMD_TMP_LOAD,
+    PH_CMD_TMP_USE
+};
+
+enum {
+    PH_CMD_IOOP_PUTINT,
+    PH_CMD_IOOP_PUTC,
+    PH_CMD_IOOP_INPUT,
+    PH_CMD_IOOP_SETX,
+    PH_CMD_IOOP_SETY,
+    PH_CMD_IOOP_NOTE
 };
 
 #endif
