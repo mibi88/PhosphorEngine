@@ -39,6 +39,8 @@
 #include <arena.h>
 #include <buffer.h>
 
+#include <commandproperties.h>
+
 #include <stdio.h>
 
 typedef struct {
@@ -47,16 +49,14 @@ typedef struct {
 } PHLabel;
 
 typedef struct {
-    unsigned char id;
-    size_t str_id;
-    size_t offset;
-} PHLabelCommand;
-
-typedef struct {
     PHLabel *labels;
     PHArena names;
+
     PHBuffer in_buffer;
     PHBuffer out_buffer;
+
+    PHCommands *commands;
+
     size_t label_count;
     int error;
 } PHLinker;
@@ -70,7 +70,7 @@ enum {
     PH_LINK_E_AMOUNT
 };
 
-int ph_linker_init(PHLinker *linker);
+int ph_linker_init(PHLinker *linker, PHCommands *commands);
 int ph_linker_add_file(PHLinker *linker, FILE *in);
 int ph_linker_link(PHLinker *linker, char *start);
 char *ph_linker_get_error(PHLinker *linker);

@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int ph_linker_init(PHLinker *linker) {
+int ph_linker_init(PHLinker *linker, PHCommands *commands) {
     if(ph_buffer_init(&linker->in_buffer, 64)) return 1;
     if(ph_buffer_init(&linker->out_buffer, 64)){
         ph_buffer_free(&linker->in_buffer);
@@ -52,6 +52,8 @@ int ph_linker_init(PHLinker *linker) {
         return 1;
     }
     linker->labels = NULL;
+
+    linker->commands = commands;
 
     linker->error = 0;
 
@@ -95,14 +97,6 @@ int ph_linker_link(PHLinker *linker, char *start) {
     size_t cmd_offset = 0;
 
     size_t byte_count = 0;
-
-    /* TODO: Put this in a separate file and pass it as an argument for
-     * flexibility */
-    static PHLabelCommand commands[PH_LABELCMD_AMOUNT] = {
-        {PH_CMD_GOTO, 0, 0},
-        {PH_CMD_CASE, 1, 0},
-        {PH_CMD_DCASE, 1, 0}
-    };
 
     /* Search all labels */
     for(i=0;i<linker->in_buffer.size;i++){
@@ -171,11 +165,11 @@ int ph_linker_link(PHLinker *linker, char *start) {
             if(!in_cmd){
                 size_t n;
 
-                for(n=0;n<PH_LABELCMD_AMOUNT;n++){
-                    if(c == commands[n].id){
+                for(n=0;n<linker->commands->labelcmd_count;n++){
+                    if(c == linker->commands->labelcmds[n].id){
                         in_cmd = 1;
-                        cmd_str = commands[n].str_id;
-                        cmd_offset = commands[n].offset;
+                        cmd_str = linker->commands->labelcmds[n].str_id;
+                        cmd_offset = linker->commands->labelcmds[n].offset;
 
                         str_cur = 0;
 
@@ -270,11 +264,11 @@ int ph_linker_link(PHLinker *linker, char *start) {
             if(!in_cmd){
                 size_t n;
 
-                for(n=0;n<PH_LABELCMD_AMOUNT;n++){
-                    if(c == commands[n].id){
+                for(n=0;n<linker->commands->labelcmd_count;n++){
+                    if(c == linker->commands->labelcmds[n].id){
                         in_cmd = 1;
-                        cmd_str = commands[n].str_id;
-                        cmd_offset = commands[n].offset;
+                        cmd_str = linker->commands->labelcmds[n].str_id;
+                        cmd_offset = linker->commands->labelcmds[n].offset;
 
                         str_cur = 0;
 

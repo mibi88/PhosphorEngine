@@ -40,12 +40,7 @@
 #include <arena.h>
 #include <buffer.h>
 
-typedef struct {
-    /* TODO: Speed up searching with hashes. */
-    int (**fncs)(void *_conv, size_t argc, char **argv);
-    char **names;
-    size_t count;
-} PHCommands;
+#include <commandproperties.h>
 
 typedef struct {
     unsigned char verbatim;

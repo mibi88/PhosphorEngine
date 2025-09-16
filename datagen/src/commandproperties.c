@@ -33,12 +33,4 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PHOSPHOR_COMMANDS_H
-#define PHOSPHOR_COMMANDS_H
-
 #include <commandproperties.h>
-#include <format.h>
-
-extern PHCommands ph_commands;
-
-#endif

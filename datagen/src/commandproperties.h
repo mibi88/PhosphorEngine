@@ -33,12 +33,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PHOSPHOR_COMMANDS_H
-#define PHOSPHOR_COMMANDS_H
+#ifndef PHOSPHOR_COMMANDPROPERTIES_H
+#define PHOSPHOR_COMMANDPROPERTIES_H
 
-#include <commandproperties.h>
-#include <format.h>
+#include <stddef.h>
 
-extern PHCommands ph_commands;
+typedef struct {
+    unsigned char id;
+    size_t str_id;
+    size_t offset;
+} PHLabelCommand;
+
+typedef struct {
+    /* Converter related stuff */
+    /* TODO: Speed up searching with hashes. */
+    int (**fncs)(void *_conv, size_t argc, char **argv);
+    char **names;
+    size_t count;
+
+    /* Linker related stuff */
+    PHLabelCommand *labelcmds;
+    size_t labelcmd_count;
+} PHCommands;
 
 #endif

@@ -111,7 +111,7 @@ mkdir -p $(dirname $data)
 for i in $(find texts -type f); do
     echo "-- Converting text adventure data $i to $data..."
     # TODO: Improve this
-    datagen/main $i $data
+    datagen/main $i -o $data
     xxd  -n $dataname -i $data > $data.c
 done
 
