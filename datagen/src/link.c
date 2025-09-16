@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* FIXME: Do not allow duplicate labels. */
+
 int ph_linker_init(PHLinker *linker, PHCommands *commands) {
     if(ph_buffer_init(&linker->in_buffer, 64)) return 1;
     if(ph_buffer_init(&linker->out_buffer, 64)){

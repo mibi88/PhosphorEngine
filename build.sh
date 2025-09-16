@@ -56,6 +56,7 @@ bin=game/main
 srcdir=js
 builddir=build
 tooldir=tools
+textdir=texts
 data=game/src/data/data.bin
 dataname=ph_data
 
@@ -105,15 +106,23 @@ else
 fi
 
 # Generate the text adventure data
+# TODO: Move this to a separate script (texts/build.sh).
 
 mkdir -p $(dirname $data)
 
-for i in $(find texts -type f); do
-    echo "-- Converting text adventure data $i to $data..."
-    # TODO: Improve this
-    datagen/main $i -o $data
-    xxd  -n $dataname -i $data > $data.c
+objlist=()
+
+for i in $(find $textdir -type f); do
+    obj=$(dirname $data)/${i#$textdir}.obj
+    echo "-- Converting text adventure data $i to $obj..."
+    datagen/main -c $i -o $obj
+    objlist+=($obj)
 done
+
+echo "-- Linking text adventure data..."
+datagen/main -l ${objlist[@]} -o $data
+
+xxd -n $dataname -i $data > $data.c
 
 # Compile the game
 

@@ -46,8 +46,7 @@
 #include <commands.h>
 
 static const char help_str[] = (
-    "USAGE: %s [-c] [-l] [-o OUTPUT_FILE] [-s START_LABEL] [-h] "
-        "[INPUT_FILES...]\n"
+    "USAGE: %s [-clh] [-o OUTPUT_FILE] [-s START_LABEL] [INPUT_FILES...]\n"
     "Phosphore Engine data conversion tool\n"
     "\n"
     "Options:\n"
@@ -210,11 +209,11 @@ int main(int argc, char **argv) {
 
             compiled_file = 1;
         }
-    }
 
-    if(!compiled_file){
-        fprintf(stderr, "%s: No input files!\n", argv[0]);
-        return EXIT_FAILURE;
+        if(!compiled_file){
+            fprintf(stderr, "%s: No input files!\n", argv[0]);
+            return EXIT_FAILURE;
+        }
     }
 
     if(link || !(link^compile)){
