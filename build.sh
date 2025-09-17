@@ -78,6 +78,16 @@ done
 mkdir -p $builddir
 mkdir -p $tooldir
 
+errorcheck() {
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "-- Build failed with exit code $rc!"
+        echo "-- Exiting $rootdir..."
+        cd $orgdir
+        exit $rc
+    fi
+}
+
 # Get some stuff
 
 closure=$tooldir/closure.jar
@@ -87,6 +97,7 @@ if [ $force = true ] || [ ! -f $closure ]; then
     #curl $closure_url > $closure
     rm -f $closure
     wget $closure_url -O $closure
+    errorcheck
 fi
 
 if [ $force = true ]; then
@@ -94,6 +105,8 @@ if [ $force = true ]; then
 else
     game/src/libgcc_parts/fetch.sh
 fi
+
+errorcheck
 
 # Compile the data generation tool
 
@@ -105,6 +118,8 @@ else
     datagen/build.sh
 fi
 
+errorcheck
+
 # Generate the text adventure data
 # TODO: Move this to a separate script (texts/build.sh).
 
@@ -114,13 +129,18 @@ objlist=()
 
 for i in $(find $textdir -type f); do
     obj=$(dirname $data)/${i#$textdir}.obj
+
     echo "-- Converting text adventure data $i to $obj..."
     datagen/main -c $i -o $obj
+
+    errorcheck
+
     objlist+=($obj)
 done
 
 echo "-- Linking text adventure data..."
 datagen/main -l ${objlist[@]} -o $data
+errorcheck
 
 xxd -n $dataname -i $data > $data.c
 
@@ -133,6 +153,7 @@ if [ $debug = true ]; then
 else
     game/build.sh
 fi
+errorcheck
 
 # Create the ZIP
 
@@ -147,6 +168,7 @@ compile() {
         mkdir -p $(dirname $out)
         java -jar $closure --js $1 --js_output_file $out
     fi
+    errorcheck
 }
 
 for i in $(find $srcdir -type f ! -name "loader_*.js"); do
@@ -184,7 +206,10 @@ rm -f $name
 
 currentdir=$(pwd)
 cd $builddir
+
 zip -9r $currentdir/$name .
+errorcheck
+
 cd $currentdir
 
 echo "-- Exiting $rootdir..."

@@ -82,32 +82,33 @@ mkdir -p $builddir
 
 objfiles=()
 
+errorcheck() {
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "-- Build failed with exit code $rc!"
+        echo "-- Exiting $rootdir..."
+        cd $orgdir
+        exit $rc
+    fi
+}
+
 for i in $(find $srcdir -mindepth 1 -type f \( -name "*.c" -o -name "*.s" \
            -o -name "*.S" \)); do
     obj=$builddir/${i#$srcdir*}.o
     echo "-- Compiling ${i} to ${obj}..."
     mkdir -p $(dirname $obj)
     $cc -c $i -o $obj ${cflags[@]}
-    if [ $? -ne 0 ]; then
-        echo "-- Build failed with exit code $?!"
-        echo "-- Exiting $rootdir..."
-        cd $orgdir
-        exit $?
-    fi
+    errorcheck
     objfiles+=($obj)
 done
 
 # Linking
 echo "-- Linking $name..."
 $ld ${objfiles[@]} -o $name.elf ${ldflags[@]}
-$objcopy -O binary $name.elf $name
+errorcheck
 
-if [ $? -ne 0 ]; then
-    echo "-- Build failed with exit code $?!"
-    echo "-- Exiting $rootdir..."
-    cd $orgdir
-    exit $?
-fi
+$objcopy -O binary $name.elf $name
+errorcheck
 
 echo "-- Generating $name.png..."
 

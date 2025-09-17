@@ -35,6 +35,4 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-nano $(find -type f ! -path "./.git/*" ! -path "./build/*" \
-            ! -path "./game/build/*" ! -path "./game/src/libgcc_parts/*" \
-            ! -path "./game/src/data/*" -exec grep -Iq . {} \; -print | sort)
+nano $(./listsrcfiles.sh)
