@@ -40,8 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* FIXME: Do not allow duplicate labels. */
-
 int ph_linker_init(PHLinker *linker, PHCommands *commands) {
     if(ph_buffer_init(&linker->in_buffer, 64)) return 1;
     if(ph_buffer_init(&linker->out_buffer, 64)){
@@ -60,6 +58,8 @@ int ph_linker_init(PHLinker *linker, PHCommands *commands) {
     linker->error = 0;
 
     linker->label_count = 0;
+
+    linker->infostr = (unsigned char*)"";
     return 0;
 }
 
@@ -83,9 +83,9 @@ int ph_linker_add_file(PHLinker *linker, FILE *in) {
 
 int ph_linker_link(PHLinker *linker, char *start) {
     size_t i;
-    unsigned char label[PH_CONV_TOKEN_MAX+1];
+    static unsigned char label[PH_CONV_TOKEN_MAX+1];
     size_t label_cur = 0;
-    unsigned char str[PH_CONV_TOKEN_MAX+1];
+    static unsigned char str[PH_CONV_TOKEN_MAX+1];
     unsigned char str_cur = 0;
     unsigned char in_label = 0;
 
@@ -106,9 +106,22 @@ int ph_linker_link(PHLinker *linker, char *start) {
         if(in_label){
             if(c == 0){
                 PHLabel *new = NULL;
+                size_t n;
+
+                /* Add the label to the label list */
 
                 in_label = 0;
                 label[label_cur] = 0;
+
+                for(n=0;n<linker->label_count;n++){
+                    if(!strcmp(linker->labels[n].name, (char*)label)){
+                        linker->error = PH_LINK_E_DUPLICATE_LABEL;
+                        linker->infostr = label;
+                        return 1;
+                    }
+                }
+
+                /* Check if the label is duplicated */
 
                 new = realloc(linker->labels, (linker->label_count+1)*
                               sizeof(PHLabel));
@@ -339,10 +352,18 @@ char *ph_linker_get_error(PHLinker *linker) {
     static char *const errors[PH_LINK_E_AMOUNT] = {
         "Success!",
         "Internal error!",
-        "Unknown label!"
+        "Unknown label!",
+        "Duplicate label!"
     };
+    static char buffer[64];
 
-    return errors[linker->error];
+    if(linker->error != PH_LINK_E_DUPLICATE_LABEL){
+        return errors[linker->error];
+    }else{
+        sprintf(buffer, "%s Label `%s' redefined!", errors[linker->error],
+                linker->infostr);
+        return buffer;
+    }
 }
 
 void ph_linker_free(PHLinker *linker) {

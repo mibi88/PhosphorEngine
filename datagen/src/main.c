@@ -99,6 +99,13 @@ static void compile_file(char *argv0, char *in_path, char *out_path,
     if(ph_conv_convert(&conv, in)){
         fprintf(stderr, "%s:%lu: Error: %s\n", in_path, conv.line,
                 ph_conv_get_error(&conv));
+
+        if(strcmp(in_path, "-")) fclose(in);
+        if(strcmp(out_path, "-")) fclose(out);
+
+        ph_conv_free(&conv);
+
+        exit(EXIT_FAILURE);
     }
 
     fwrite(conv.buffer.data, 1, conv.buffer.size, out);
@@ -144,6 +151,8 @@ static void link_end(char *argv0, char *out_path, char *start_label) {
     if(ph_linker_link(&linker, start_label)){
         fprintf(stderr, "%s: Error: %s\n", argv0,
                 ph_linker_get_error(&linker));
+        ph_linker_free(&linker);
+        exit(EXIT_FAILURE);
     }
 
     if(strcmp(out_path, "-")){
@@ -173,8 +182,6 @@ int main(int argc, char **argv) {
 
     char *out_path = "-";
     char *start_label = "main";
-
-    /* TODO: Allow multiple input files for a single output file. */
 
     while((opt = getopt(argc, argv, "hcls:o:")) != -1){
         switch(opt){

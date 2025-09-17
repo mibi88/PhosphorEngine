@@ -59,6 +59,8 @@ typedef struct {
 
     size_t label_count;
     int error;
+
+    unsigned char *infostr;
 } PHLinker;
 
 enum {
@@ -66,6 +68,7 @@ enum {
 
     PH_LINK_E_INTERNAL,
     PH_LINK_E_UNKNOWN_LABEL,
+    PH_LINK_E_DUPLICATE_LABEL,
 
     PH_LINK_E_AMOUNT
 };

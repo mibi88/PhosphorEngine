@@ -121,28 +121,10 @@ fi
 errorcheck
 
 # Generate the text adventure data
-# TODO: Move this to a separate script (texts/build.sh).
 
-mkdir -p $(dirname $data)
+texts/build.sh
 
-objlist=()
-
-for i in $(find $textdir -type f); do
-    obj=$(dirname $data)/${i#$textdir}.obj
-
-    echo "-- Converting text adventure data $i to $obj..."
-    datagen/main -c $i -o $obj
-
-    errorcheck
-
-    objlist+=($obj)
-done
-
-echo "-- Linking text adventure data..."
-datagen/main -l ${objlist[@]} -o $data
 errorcheck
-
-xxd -n $dataname -i $data > $data.c
 
 # Compile the game
 

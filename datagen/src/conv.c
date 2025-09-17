@@ -205,7 +205,6 @@ int ph_conv_convert(PHConv *conv, FILE *in) {
             if(command && command_tok){
                 /* Run the command */
 
-                /* TODO: Restrict commands in verbatim mode */
                 size_t i;
 
                 for(i=0;i<conv->commands->count;i++){
