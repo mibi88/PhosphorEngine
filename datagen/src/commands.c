@@ -451,7 +451,7 @@ static int math(void *_conv, size_t argc, char **argv) {
     if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
     if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
 
-    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+    ph_buffer_putc(&conv->buffer, PH_CMD_MATH);
 
     for(i=0;subcmds[i] != NULL;i++){
         if(!strcmp(argv[1], subcmds[i])){
@@ -484,7 +484,7 @@ static int tmp(void *_conv, size_t argc, char **argv) {
     if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
     if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
 
-    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+    ph_buffer_putc(&conv->buffer, PH_CMD_TMPOP);
 
     for(i=0;subcmds[i] != NULL;i++){
         if(!strcmp(argv[1], subcmds[i])){
@@ -520,7 +520,7 @@ static int branch(void *_conv, size_t argc, char **argv) {
     if(argc < 3) return PH_CONV_E_TOO_FEW_ARGS;
     if(argc > 3) return PH_CONV_E_TOO_MANY_ARGS;
 
-    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+    ph_buffer_putc(&conv->buffer, PH_CMD_BRANCH);
 
     for(i=0;subcmds[i] != NULL;i++){
         if(!strcmp(argv[1], subcmds[i])){
@@ -557,7 +557,7 @@ static int io(void *_conv, size_t argc, char **argv) {
     if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
     if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
 
-    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+    ph_buffer_putc(&conv->buffer, PH_CMD_IOOP);
 
     for(i=0;subcmds[i] != NULL;i++){
         if(!strcmp(argv[1], subcmds[i])){
@@ -596,7 +596,7 @@ static int ext(void *_conv, size_t argc, char **argv) {
     if(argc < 2) return PH_CONV_E_TOO_FEW_ARGS;
     if(argc > 2) return PH_CONV_E_TOO_MANY_ARGS;
 
-    ph_buffer_putc(&conv->buffer, PH_CMD_VAR);
+    ph_buffer_putc(&conv->buffer, PH_CMD_EXTENDED);
 
     for(i=0;subcmds[i] != NULL;i++){
         if(!strcmp(argv[1], subcmds[i])){

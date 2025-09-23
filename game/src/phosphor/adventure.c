@@ -318,6 +318,34 @@ void ph_adventure_run(PHAdventure *adv) {
                 loading_bgm = 0;
                 break;
 
+            case PH_CMD_VAR:
+                /* TODO */
+                break;
+
+            case PH_CMD_MATH:
+                /* TODO */
+                break;
+
+            case PH_CMD_TMPOP:
+                /* TODO */
+                break;
+
+            case PH_CMD_BRANCH:
+                /* TODO */
+                break;
+
+            case PH_CMD_IOOP:
+                /* TODO */
+                break;
+
+            case PH_CMD_RETURN:
+                /* TODO */
+                break;
+
+            case PH_CMD_EXTENDED:
+                /* TODO */
+                break;
+
             default:
                 /* TODO: Add word wrap etc. */
                 if(_VALID(_C)){
